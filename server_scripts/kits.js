@@ -1,7 +1,18 @@
+/**
+ * @typedef {Object} KitData
+ * @property {string} name - The name of the kit
+ * @property {string} colorCode - The Minecraft Color Code for Text
+ * @property {Array<Internal.ItemStack>} items - Array of items to give the player
+ */
+
+/**
+ * @type {Array<KitData>}
+ */
+// TODO this array should be dynamic and let server operators add their own kits, saved in the server data.
 const KITS = [
     {
         name: "Shotgun",
-        color: '§c',
+        colorCode: '§c',
         items: [
             {
                 item: "cgm:shotgun",
@@ -18,7 +29,7 @@ const KITS = [
     },
     {
         name: "Rifle",
-        color: '§6',
+        colorCode: '§6',
         items: [
             {
                 item: "cgm:pistol",
