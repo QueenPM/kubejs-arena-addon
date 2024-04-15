@@ -39,9 +39,15 @@ const KITS = [
     }
 ]
 
+/**
+ * Gives a player a kit.
+ * @param {Internal.LivingEntity} player 
+ * @param {string} kitName 
+ * @returns {boolean} True/False on the success of the operation.
+ */
 function giveKit(player, kitName){
     const pData = getPlayerData(player);
-    if(!pData) return;
+    if(!pData) return false;
     let foundKit = KITS.find(shop => shop.name.toLowerCase() == kitName.toLowerCase());
     if(!foundKit) return false;
     let items = foundKit.items
