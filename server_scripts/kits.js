@@ -2,7 +2,7 @@ function print(text){
     Utils.server.tell(text)
 }
 
-const SHOPS = [
+const KITS = [
     {
         name: "Shotgun",
         color: '§c',
@@ -42,7 +42,7 @@ const SHOPS = [
 function giveKit(player, kitName){
     const pData = getPlayerData(player);
     if(!pData) return;
-    let foundKit = SHOPS.find(shop => shop.name.toLowerCase() == kitName.toLowerCase());
+    let foundKit = KITS.find(shop => shop.name.toLowerCase() == kitName.toLowerCase());
     if(!foundKit) return false;
     let items = foundKit.items
     player.inventory.clear()
@@ -74,7 +74,7 @@ ServerEvents.commandRegistry((event) => {
 
     event.register(Commands.literal('kits')
         .executes(c => {
-            let kits = SHOPS.map(shop => shop.name)
+            let kits = KITS.map(shop => shop.name)
             c.source.player.displayClientMessage(Component.white('Available Kits: ').append(Component.yellow(kits.join(', '))), true);
             return 1
         })
