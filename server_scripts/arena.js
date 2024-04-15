@@ -1,3 +1,5 @@
+
+// global var for the bossbar color. Used as a control to not spam the bossbar color change. Probably a better way to do this
 let currentColor = "§a";
 
 /**

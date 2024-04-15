@@ -23,6 +23,7 @@
  * @property {number} deaths - Number of deaths the player has
  */
 
+// Quick func to print to console/server
 function print(text){
     Utils.server.tell(text)
 }
@@ -60,6 +61,14 @@ ServerEvents.loaded((event)=>{
     server.runCommandSilent("team modify Spawn friendlyFire false");
     server.runCommandSilent("team join Spawn @a");
     getPSData();
+})
+
+// When a player spawns in, always assign the "Spawn" team to them and put them back into spawn
+PlayerEvents.loggedIn((event) => {
+    // Give them the "Spawn" team
+    event.server.runCommandSilent(`team join Spawn ${event.player.username}`);
+    // Put them back in spawn
+    event.server.runCommandSilent(`kill ${event.player.username}`);
 })
 
 /**
@@ -131,6 +140,11 @@ function saveArenaData(data){
     }
 }
 
+/**
+ * Saves the persistent server data
+ * @param {ServerKathData} data 
+ * @returns 
+ */
 function savePSData(data){
     let server = Utils.getServer();
     if(!server) return;

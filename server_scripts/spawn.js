@@ -1,3 +1,6 @@
+// TODO Turn the tools and right-clicking of items into a helper function that both this and the arena spawn scripts can use
+// Clean up both functions to be more modular and easier to read
+// Also all of this logic can probably go into teams.js - its more appropriate there
 function giveSpawnTools(player){
     player.give({
         item: "minecraft:red_dye",
@@ -52,40 +55,6 @@ ServerEvents.commandRegistry((event) => {
     ))
     );
 });
-
-
-// Change player team based on spawn blocks
-PlayerEvents.tick((event) => {
-    if(getActiveArena()) return; // Don't run if an arena is active
-    if(!event.server) return;
-    let psData = getPSData();
-    if(!psData) return;
-
-    let blocks = psData.teamDesignationBlocks;
-    let player = event.player;
-
-    // Check if the player is inside one of the blocks
-    let playerX = Math.floor(player.x);
-    let playerZ = Math.floor(player.z);
-
-    let foundBlock = blocks.find(b => {
-        return b.x == playerX && b.z == playerZ;
-    });
-
-    
-    let playerData = getPlayerData(player);
-    if(!playerData) return;
-    if(foundBlock){
-        let team = foundBlock.team;
-        if(!playerData.team || playerData.team != team){
-            joinTeam(player, team);
-        }
-    }else{
-        if(playerData.team && !playerData.teamCommandAssigned){
-            leaveTeam(player);
-        }
-    }
-})
 
 BlockEvents.rightClicked((event) =>{
     if(!event.server) return;

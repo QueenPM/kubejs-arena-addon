@@ -147,10 +147,35 @@ ServerEvents.commandRegistry((event) => {
     );
 });
 
-// When a player spawns in, always assign the "Spawn" team to them and put them back into spawn
-PlayerEvents.loggedIn((event) => {
-    // Give them the "Spawn" team
-    event.server.runCommandSilent(`team join Spawn ${event.player.username}`);
-    // Put them back in spawn
-    event.server.runCommandSilent(`kill ${event.player.username}`);
+// Change player team based on spawn blocks
+PlayerEvents.tick((event) => {
+    if(getActiveArena()) return; // Don't run if an arena is active
+    if(!event.server) return;
+    let psData = getPSData();
+    if(!psData) return;
+
+    let blocks = psData.teamDesignationBlocks;
+    let player = event.player;
+
+    // Check if the player is inside one of the blocks
+    let playerX = Math.floor(player.x);
+    let playerZ = Math.floor(player.z);
+
+    let foundBlock = blocks.find(b => {
+        return b.x == playerX && b.z == playerZ;
+    });
+
+    
+    let playerData = getPlayerData(player);
+    if(!playerData) return;
+    if(foundBlock){
+        let team = foundBlock.team;
+        if(!playerData.team || playerData.team != team){
+            joinTeam(player, team);
+        }
+    }else{
+        if(playerData.team && !playerData.teamCommandAssigned){
+            leaveTeam(player);
+        }
+    }
 })
