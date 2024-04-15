@@ -470,7 +470,7 @@ BlockEvents.rightClicked((event) =>{
                 original_block: originalBlock,
             });
             // Replace the block with concrete
-            block.set(foundTeam.spawn_block);
+            block.set(foundTeam.spawnBlock);
             
             player.displayClientMessage(`§aArena ${arenaName} ${spawn} spawn set to ${x}, ${y}, ${z}!`, true)
             saveArenaData(arenaName, arena);
@@ -502,7 +502,7 @@ BlockEvents.broken((event)=>{
         for(const arena of arenas){
             let foundSpawn = arena.spawns.find(s => s.x == block.x && s.y == block.y && s.z == block.z);
             if(foundSpawn){
-                let spawnBlock = TEAMS.find(t => t.name == foundSpawn.team).spawn_block
+                let spawnBlock = TEAMS.find(t => t.name == foundSpawn.team).spawnBlock
                 event.server.schedule(10, ()=>{
                     block.set(spawnBlock);
                 })

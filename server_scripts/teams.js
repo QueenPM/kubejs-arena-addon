@@ -1,17 +1,29 @@
+/**
+ * @typedef {Object} TeamData
+ * @property {string} name - The name of the team
+ * @property {string} colorCode - The Minecraft Color Code for Text
+ * @property {number} decimalColor - The decimal color code. Used for fireworks & other things
+ * @property {string} block - Unused. This was used for right clicking to get a team. Might be re-used in the future. Perhaps replace the Team Designation blocks with this.
+ * @property {string} spawnBlock - Minecraft Block ID for the block to be used for Team Spawns
+ */
+
+/**
+ * @type {Array<TeamData>}
+ */
 const TEAMS = [
     {
         name: "Blue",
         colorCode: "§9",
         decimalColor: 255,
         block: "minecraft:blue_wool",
-        spawn_block: "minecraft:blue_concrete"
+        spawnBlock: "minecraft:blue_concrete"
     },
     {
         name: "Red",
         colorCode: "§c",
         decimalColor: 16711680,
         block: "minecraft:red_wool",
-        spawn_block: "minecraft:red_concrete"
+        spawnBlock: "minecraft:red_concrete"
     }
 ]
 // TODO this probably doesnt get used in places where it needs to be.

@@ -92,7 +92,7 @@ BlockEvents.rightClicked((event) =>{
                 original_block: originalBlock,
             });
             // Replace the block with concrete
-            block.set(foundTeam.spawn_block);
+            block.set(foundTeam.spawnBlock);
             
             player.displayClientMessage(`${foundTeam.colorCode}Team Block for ${team} set to ${x}, ${y}, ${z}!`, true)
             savePSData(serverData);
