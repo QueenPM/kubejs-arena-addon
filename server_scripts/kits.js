@@ -48,7 +48,7 @@ const KITS = [
 
 /**
  * Gives a player a kit.
- * @param {Internal.LivingEntity} player 
+ * @param {Internal.ServerPlayer} player 
  * @param {string} kitName 
  * @returns {boolean} True/False on the success of the operation.
  */

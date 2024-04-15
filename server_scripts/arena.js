@@ -41,7 +41,7 @@ function stopActiveArena(){
 /**
  * Starts an arena
  * @param {*} arenaName 
- * @param {Internal.LivingEntity} player 
+ * @param {Internal.ServerPlayer} player 
  * @returns 
  */
 function startArena(arenaName, player){
@@ -234,7 +234,7 @@ function getAllArenas(){
 
 /**
  * Gives the player the tools to configure an arena
- * @param {Internal.LivingEntity} player 
+ * @param {Internal.ServerPlayer} player 
  * @param {*} arenaName 
  */
 function giveArenaTools(player, arenaName){ // TODO we can clean this up to be nicer

@@ -55,7 +55,7 @@ function notifyTeamPlayers(team, message){
 
 /**
  * Join a team
- * @param {Internal.LivingEntity} player 
+ * @param {Internal.ServerPlayer} player 
  * @param {string} team 
  * @param {boolean} teamCommandAssigned
  * @returns 
@@ -92,7 +92,7 @@ function joinTeam(player, team, teamCommandAssigned){
 
 /**
  * Leave a team
- * @param {Internal.LivingEntity} player 
+ * @param {Internal.ServerPlayer} player 
  * @param {boolean} teamCommandAssigned
  */
 function leaveTeam(player, teamCommandAssigned){

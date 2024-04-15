@@ -73,7 +73,7 @@ PlayerEvents.loggedIn((event) => {
 
 /**
  * Gets player data
- * @param {Internal.LivingEntity} player 
+ * @param {Internal.ServerPlayer} player 
  * @returns {null|PlayerKathData}
  */
 function getPlayerData(player){
@@ -95,7 +95,7 @@ function getPlayerData(player){
 
 /**
  * Saves player data
- * @param {Internal.LivingEntity} player 
+ * @param {Internal.ServerPlayer} player 
  * @param {PlayerKathData} data 
  */
 function savePlayerData(player, data){
