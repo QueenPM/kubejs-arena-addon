@@ -1,0 +1,156 @@
+const TEAMS = [
+    {
+        name: "Blue",
+        colorCode: "§9",
+        decimalColor: 255,
+        block: "minecraft:blue_wool",
+        spawn_block: "minecraft:blue_concrete"
+    },
+    {
+        name: "Red",
+        colorCode: "§c",
+        decimalColor: 16711680,
+        block: "minecraft:red_wool",
+        spawn_block: "minecraft:red_concrete"
+    }
+]
+// TODO this probably doesnt get used in places where it needs to be.
+// could probably remove it or replace it where its needed
+function getTeam(team){
+    return TEAMS.find(t => t.name.toLowerCase() == team.toLowerCase());
+}
+
+/**
+ * Sends a message to all players part of the same team
+ * @param {*} team 
+ */
+function notifyTeamPlayers(team, message){
+    let server = Utils.getServer();
+    if(!server) return;
+    let players = server.getPlayers();
+    let teamPlayers = players.filter(p => {
+        let pData = getPlayerData(p);
+        if(!pData) return false;
+        return pData.team == team.name;
+    });
+
+    for(const player of teamPlayers){
+        player.tell(message);
+    }
+}
+
+/**
+ * Join a team
+ * @param {Internal.LivingEntity} player 
+ * @param {string} team 
+ * @param {boolean} teamCommandAssigned
+ * @returns 
+ */
+function joinTeam(player, team, teamCommandAssigned){
+    let pData = getPlayerData(player);
+    if(!pData) return false;
+    let foundTeam = TEAMS.find(t => t.name.toLowerCase() == team.toLowerCase());
+    if(!foundTeam) return false;
+    
+    if(pData.team === foundTeam.name){
+        return 1;
+    }else{
+        let server = Utils.getServer();
+        if(!server) return;
+        
+        // Create the minecraft team
+        let teamName = foundTeam.name
+        let teamColor = foundTeam.colorCode;
+        server.runCommandSilent(`team add ${teamName}`);
+        server.runCommandSilent(`team modify ${teamName} color ${teamColor}`);
+        
+        pData.team = foundTeam.name;
+        if(!teamCommandAssigned) teamCommandAssigned = false;
+        pData.teamCommandAssigned = teamCommandAssigned;
+        savePlayerData(player, pData);
+
+        player.displayClientMessage(`${foundTeam.colorCode}You'll be participating as ${team}!`, true)
+        let msg = `${foundTeam.colorCode}${player.username} has joined Team ${foundTeam.name}!`;
+        notifyTeamPlayers(foundTeam, msg);
+        return foundTeam;
+    }
+}
+
+/**
+ * Leave a team
+ * @param {Internal.LivingEntity} player 
+ * @param {boolean} teamCommandAssigned
+ */
+function leaveTeam(player, teamCommandAssigned){
+    let pData = getPlayerData(player);
+    if(!pData) return;
+    let server = Utils.getServer();
+    if(!server) return;
+    let team = pData.team;
+    if(!team) return;
+    
+    if(!teamCommandAssigned) teamCommandAssigned = false;
+    server.runCommandSilent(`team join Spawn ${player.username}`);
+    pData.team = null;
+    pData.teamCommandAssigned = teamCommandAssigned;
+    savePlayerData(player, pData);
+
+    player.displayClientMessage(`You've left your team and won't participate in the Arenas`, true)
+    let msg = `${player.username} has left Team ${team}!`;
+    notifyTeamPlayers(team, msg);
+}
+
+
+// Team related command resgistry
+ServerEvents.commandRegistry((event) => {
+    let { commands: Commands, arguments: Arguments } = event;
+    event.register(Commands.literal('team-arena') // The name of the command
+        // Join a team
+        .then(Commands.literal('join')
+            .then(Commands.argument('name', Arguments.STRING.create(event))
+                .suggests((c, b) => {
+                    for(const team of TEAMS){
+                        b.suggest(team.name)
+                    }
+                    return b.build()
+                })
+                .executes(c => {
+                    let name = Arguments.STRING.getResult(c, 'name');
+                    let result = joinTeam(c.source.player, name, true);
+                    if(typeof result == "object"){
+                        return 1;
+                    }else if(result === 1){
+                        c.source.player.tell('You\'re already on that team!');
+                        return 1;
+                    }
+
+                    c.source.player.tell('Invalid team!');
+                    return 1;
+                }
+            )
+        ))
+        .then(Commands.literal('leave')
+            .executes(c => {
+                let pData = getPlayerData(c.source.player);
+                if(!pData) return;
+                let server = Utils.getServer();
+                if(!server) return;
+                let team = pData.team;
+                if(!team) {
+                    c.source.player.tell('You\'re not on a team!');
+                    return 1;
+                }
+                leaveTeam(c.source.player, true);
+                return 1
+            }
+        ))
+    );
+});
+
+// When a player spawns in, always assign the "Spawn" team to them and put them back into spawn
+PlayerEvents.loggedIn((event) => {
+    // Give them the "Spawn" team
+    event.server.runCommandSilent(`team join Spawn ${event.player.username}`);
+    // Put them back in spawn
+    event.server.runCommandSilent(`kill ${event.player.username}`);
+})
