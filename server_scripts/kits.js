@@ -1,7 +1,3 @@
-function print(text){
-    Utils.server.tell(text)
-}
-
 const KITS = [
     {
         name: "Shotgun",
