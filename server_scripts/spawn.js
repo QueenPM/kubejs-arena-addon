@@ -1,6 +1,10 @@
 // TODO Turn the tools and right-clicking of items into a helper function that both this and the arena spawn scripts can use
 // Clean up both functions to be more modular and easier to read
 // Also all of this logic can probably go into teams.js - its more appropriate there
+/**
+ * 
+ * @param {Internal.ServerPlayer} player 
+ */
 function giveSpawnTools(player){
     player.give({
         item: "minecraft:red_dye",
