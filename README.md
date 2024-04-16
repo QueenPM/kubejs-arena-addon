@@ -19,14 +19,15 @@ All you need to do is copy this folder's contents into your `kubejs` folder in y
 ## Usage
 ### Arena Commands (Needs OP)
 - `/arena create <arena_name>` - This will create a new arena with the name you provided. You'll be given Tools with which you can designate Team Spawns, Player Spawns, and the Arena's boundaries.
+
 **Note:** Arena data is stored in the persistent data of the world and players.
 
+- `/arena start <arena_name>` - This will start the Arena, teleporting all participating players. To participate in an Arena, see [**Teams**](#teams)
 - `/arena delete <arena_name>` - This will delete the arena and all of its data.
 - `/arena list` - This will list all the arenas in the world.
 - `/arena tp <arena_name>` - This will teleport you to the arena's center or a random spawn location.
 - `/arena clear-spawns <arena_name>` - This will clear all spawns inside the Arena
 
-- `/arena start <arena_name>` - This will start the Arena, teleporting all participating players. To participate in an Arena, see **Teams**
 ### Teams
 - `/team-arena join <Blue/Red>` - Joins either Team Blue/Red. You need to be a part of a team to participate in an Arena.
 - `/team-arena leave`- Leaves your current team.
