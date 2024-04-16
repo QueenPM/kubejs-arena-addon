@@ -9,6 +9,7 @@
  * @type {Array<KitData>}
  */
 // TODO this array should be dynamic and let server operators add their own kits, saved in the server data.
+// TODO Before a kit is applied, it should save the player's previous inventory and restore it when the kit is removed. The player's previous inventory should be restored after an arena has finished
 const KITS = [
     {
         name: "Shotgun",
