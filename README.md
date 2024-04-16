@@ -1,6 +1,6 @@
 # kubejs Arena Script
 
-This project is a script for the Minecraft Modpack [Kath.gg Arean](www.curseforge.com) using KubeJS Mod.
+This project is a script for the Minecraft Modpack [Kath.gg Arena](www.curseforge.com) using KubeJS Mod.
 
 This script is used to create a custom arena for the modpack. Features include:
 - Create and Manage Arenas
