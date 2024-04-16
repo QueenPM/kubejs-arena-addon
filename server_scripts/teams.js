@@ -65,6 +65,10 @@ function joinTeam(player, team, teamCommandAssigned){
     if(!pData) return false;
     let foundTeam = TEAMS.find(t => t.name.toLowerCase() == team.toLowerCase());
     if(!foundTeam) return false;
+    if(getActiveArena()){
+        player.tell('You can\'t join a team while an Arena is active!');
+        return false;
+    }
     
     if(pData.team === foundTeam.name){
         return 1;
@@ -108,10 +112,14 @@ function leaveTeam(player, teamCommandAssigned){
     pData.team = null;
     pData.teamCommandAssigned = teamCommandAssigned;
     savePlayerData(player, pData);
-
+    
     player.displayClientMessage(`You've left your team and won't participate in the Arenas`, true)
     let msg = `${player.username} has left Team ${team}!`;
     notifyTeamPlayers(team, msg);
+    if(getActiveArena()){
+        server.runCommandSilent(`kill ${player.username}`);
+
+    }
 }
 
 
