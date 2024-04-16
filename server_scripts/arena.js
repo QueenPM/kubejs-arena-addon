@@ -167,7 +167,9 @@ EntityEvents.death((event)=>{
     let killerData = getPlayerData(source.player);
     if(killerData){
         killerData.kills++;
-        event.server.runCommandSilent(`effect give ${source.player.username} minecraft:regeneration 12 2 true`);
+        let missingHealth = 20 - source.player.health;
+        let regenerationDuration = Math.ceil(missingHealth * 1.6);
+        event.server.runCommandSilent(`effect give ${source.player.username} minecraft:regeneration ${regenerationDuration} 2 true`);
         savePlayerData(source.player, killerData);
     }
 
@@ -193,6 +195,12 @@ PlayerEvents.respawned((event)=>{
         if(availableSpawns.length == 0) return;
         let spawn = availableSpawns[Math.floor(Math.random() * availableSpawns.length)];
         event.player.teleportTo(spawn.x + 0.5, spawn.y + 2, spawn.z + 0.5);
+
+        let teamData = getTeam(team);
+        if(teamData){
+            event.server.runCommandSilent(`item replace entity ${event.player.username} armor.head with leather_helmet{display:{color:${teamData.decimalColor}},Unbreakable:1,AttributeModifiers:[{AttributeName:"generic.armor",Amount:15,Slot:head,Name:"generic.armor",UUID:[I;-124316,10165,22544,-20330]}]} 1`)
+        }
+
     }catch(e){
         print(e)
     }
