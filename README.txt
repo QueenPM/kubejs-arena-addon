@@ -1,15 +1,43 @@
-Find out more info on the website: https://kubejs.com/
+# kubejs Arena Script
 
-Directory information:
+This project is a script for the Minecraft Modpack [Kath.gg Arean](www.curseforge.com) using KubeJS Mod.
 
-assets - Acts as a resource pack, you can put any client resources in here, like textures, models, etc. Example: assets/kubejs/textures/item/test_item.png
-data - Acts as a datapack, you can put any server resources in here, like loot tables, functions, etc. Example: data/kubejs/loot_tables/blocks/test_block.json
+This script is used to create a custom arena for the modpack. Features include:
+- Create and Manage Arenas
+- Designate random spawn locations for Arenas
+- Create Kits for players to use in Arenas
 
-startup_scripts - Scripts that get loaded once during game startup - Used for adding items and other things that can only happen while the game is loading (Can be reloaded with /kubejs reload_startup_scripts, but it may not work!)
-server_scripts - Scripts that get loaded every time server resources reload - Used for modifying recipes, tags, loot tables, and handling server events (Can be reloaded with /reload)
-client_scripts - Scripts that get loaded every time client resources reload - Used for JEI events, tooltips and other client side things (Can be reloaded with F3+T)
+### Prerequisites
 
-config - KubeJS config storage. This is also the only directory that scripts can access other than world directory
-exported - Data dumps like texture atlases end up here
+- Minecraft Verion 1.19+
+- KubeJS Mod with either Forge or Fabric
 
-You can find type-specific logs in logs/kubejs/ directory
+### Installation
+
+All you need to do is copy this folder's contents into your `kubejs` folder in your Minecraft instance.
+
+## Usage
+### Arena Commands (Needs OP)
+`/arena create <arena_name>` - This will create a new arena with the name you provided. You'll be given Tools with which you can designate Team Spawns, Player Spawns, and the Arena's boundaries.
+**Note:** Arena data is stored in the persistent data of the world and players.
+`/arena delete <arena_name>` - This will delete the arena and all of its data.
+`/arena list` - This will list all the arenas in the world.
+`/arena tp <arena_name>` - This will teleport you to the arena's center or a random spawn location.
+`/arena clear-spawns <arena_name>` - This will clear all spawns inside the Arena
+
+`/arena start <arena_name>` - This will start the Arena, teleporting all participating players. To participate in an Arena, see **Teams**
+### Teams
+`/team-arena join <Blue/Red>` - Joins either Team Blue/Red. You need to be a part of a team to participate in an Arena.
+`/team-arena leave`- Leaves your current team.
+
+`/spawn tools` - Gives you tools to designate locations for when players enter, they will automatically be assigned to Team Red/Blue. Useful for Lobbies/Hubs
+### Kits
+`/kit <kit_name>` - Clear's the player's inventory and gives them the kit's contents. This assigns them the kit and they'll get the kit contents back everytime they respawn.
+`/unkit` - Clears the player's inventory and removes the kit.
+## Built With
+
+* [Product Name](link) - The framework used
+
+## License
+
+This project is licensed under the MIT License
