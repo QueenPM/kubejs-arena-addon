@@ -18,7 +18,7 @@ function stopActiveArena(){
         
         // Summon a firework at everyone
         server.schedule(50, ()=>{
-            server.runCommandSilent(`execute as @a run summon firework_rocket ~ ~ ~ {LifeTime:15,FireworksItem:{id:firework_rocket,Count:1,tag:{Fireworks:{Explosions:[{Colors:[I;16711680,255]}]}}}}`);
+            server.runCommandSilent(`execute as @a run summon firework_rocket ~ ~ ~ {LifeTime:0,FireworksItem:{id:firework_rocket,Count:1,tag:{Fireworks:{Explosions:[{Colors:[I;16711680,255]}]}}}}`);
         })
 
         server.runCommandSilent(`title @a title "§aEvent has concluded!"`);
@@ -100,8 +100,12 @@ function startArena(arenaName, player){
     server.runCommandSilent(`team modify Red nametagVisibility never`);
     server.runCommandSilent(`team modify Blue nametagVisibility never`);
 
+    // Turn off kill feed
+    server.runCommandSilent(`team modify Red deathMessageVisibility never`);
+    server.runCommandSilent(`team modify Blue deathMessageVisibility never`);
+
     // Create a scoreboard to track player kills
-    server.runCommandSilent(`scoreboard objectives add kills deathCount`);
+    server.runCommandSilent(`scoreboard objectives add kills playerKillCount`);
     server.runCommandSilent(`scoreboard objectives setdisplay sidebar kills`);
 
     // Send a title
@@ -148,16 +152,14 @@ EntityEvents.death((event)=>{
     let pData = getPlayerData(entity)
     if(!pData || !pData.team) return;
 
-    // If it is an active Arena
-
-    let teamData = getTeam(pData.team);
-    if(teamData){
-        event.server.runCommandSilent(`summon firework_rocket ${entity.x} ${entity.y} ${entity.z} {LifeTime:0,FireworksItem:{id:firework_rocket,Count:1,tag:{Fireworks:{Explosions:[{Colors:[I;${teamData.decimalColor}]}]}}}}`);
-    }
-
     // If it was killed by a player, play a ding sound
     let source = event.source;
-    if(source.type != "minecraft:player") return;
+    if(source.player.username === entity.username) return;
+    let teamData = getTeam(pData.team);
+    if(teamData){
+        event.server.runCommandSilent(`execute at @a run particle minecraft:end_rod ${entity.x} ${entity.y} ${entity.z} 0.5 0.5 0.5 0 100 normal @a`);
+        event.server.runCommandSilent(`/execute at @a run playsound minecraft:entity.arrow.hit_player master @a ${entity.x} ${entity.y} ${entity.z} 1 1 1`);
+    }
     source.player.playSound("minecraft:entity.experience_orb.pickup");
 
     pData.deaths++;
@@ -165,8 +167,11 @@ EntityEvents.death((event)=>{
     let killerData = getPlayerData(source.player);
     if(killerData){
         killerData.kills++;
+        event.server.runCommandSilent(`effect give ${source.player.username} minecraft:regeneration 12 2 true`);
         savePlayerData(source.player, killerData);
     }
+
+    print(`${entity.username} was killed by ${source.player.username}!`)
 })
 
 PlayerEvents.respawned((event)=>{
@@ -601,9 +606,4 @@ ServerEvents.tick((event)=>{
     }catch(e){
         print(e)
     }
-})
-
-// Cancels death messages in favour for custom messages
-EntityEvents.death((event)=>{
-    event.cancel();
 })
