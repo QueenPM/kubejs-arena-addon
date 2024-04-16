@@ -408,6 +408,34 @@ ServerEvents.commandRegistry((event) => {
                 return 1;
             })
         )
+        .then(Commands.literal('tp')
+            .then(Commands.argument('name', Arguments.STRING.create(event))
+                .executes(c => {
+                    let name = Arguments.STRING.getResult(c, 'name');
+                    let arena = getArenaData(name);
+                    if(!arena){
+                        c.source.player.tell('Arena not found!');
+                        return 1;
+                    }
+                    if(arena.corner1 || arena.corner2){
+                        let corner1 = arena.corner1;
+                        let corner2 = arena.corner2;
+                        let x = Math.floor((corner1.x + corner2.x) / 2);
+                        let z = Math.floor((corner1.z + corner2.z) / 2);
+                        c.source.player.teleportTo(x, 100, z);
+                        return 1;
+                    }
+                    if(arena.spawns.length > 0){
+                        let spawn = arena.spawns[0];
+                        c.source.player.teleportTo(spawn.x, spawn.y, spawn.z);
+                        return 1;
+                    }
+
+                    c.source.player.tell('Couldn\'t teleport you to the Arena because no Spawns or Corners were set.');
+                    return 1;
+                }
+            )
+        ))
     );
 });
 
