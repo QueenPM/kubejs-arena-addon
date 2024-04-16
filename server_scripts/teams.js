@@ -163,10 +163,16 @@ ServerEvents.commandRegistry((event) => {
 
 // Change player team based on spawn blocks
 PlayerEvents.tick((event) => {
+    try{
+        event.server.runCommandSilent(`effect give ${event.player.username} minecraft:saturation 1 255 true`)
+    }catch(e){
+        print(e)
+    }
     if(getActiveArena()) return; // Don't run if an arena is active
     if(!event.server) return;
     let psData = getPSData();
     if(!psData) return;
+
 
     let blocks = psData.teamDesignationBlocks;
     let player = event.player;
