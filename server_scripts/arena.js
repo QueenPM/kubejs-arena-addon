@@ -660,11 +660,7 @@ let tick = 0;
  * @returns 
  */
 function showArenaScoreboard(arena){
-    tick++;
-    if(tick == 21){
-        tick = 0;
-    }
-    if(tick%5 !== 0) return;
+    if(ticks++ % 20 !== 0) return;
     let lines = [
         `No Arena is currently Active`,
         `Start playing by using`,
