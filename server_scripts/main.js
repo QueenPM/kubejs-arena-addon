@@ -22,11 +22,13 @@
  * @property {boolean} teamCommandAssigned
  * @property {number} kills - Number of kills the player has
  * @property {number} deaths - Number of deaths the player has
+ * @property {Object} coords - The coordinates of the player
  */
 
 // Quick func to print to console/server
 function print(text){
     Utils.server.tell(text)
+    console.log(text)
 }
 
 /**
@@ -67,12 +69,14 @@ ServerEvents.loaded((event)=>{
 })
 
 // When a player spawns in, always assign the "Spawn" team to them and put them back into spawn
-PlayerEvents.loggedIn((event) => {
-    // Give them the "Spawn" team
-    event.server.runCommandSilent(`team join Spawn ${event.player.username}`);
-    // Put them back in spawn
-    event.server.runCommandSilent(`kill ${event.player.username}`);
-})
+// PlayerEvents.loggedIn((event) => {
+//     let data = getPlayerData(event.player);
+//     if(!data) return;
+
+//     if(data.team){
+//         leaveTeam(event.player);
+//     }
+// })
 
 /**
  * Gets player data
@@ -80,15 +84,17 @@ PlayerEvents.loggedIn((event) => {
  * @returns {null|PlayerKathData}
  */
 function getPlayerData(player){
+    /**
+     * @type {PlayerKathData}
+     */
     let data = player.persistentData.get("kath");
     if(!data){
         data = {}
     }
-    if(!data.kit) data.kit = null;
-    if(!data.team) data.team = null;
     if(!data.teamCommandAssigned) data.teamCommandAssigned = false;
     if(!data.kills) data.kills = 0;
     if(!data.deaths) data.deaths = 0;
+    if(!data.coords) data.coords = {x:player.x, y:player.y, z:player.z};
 
     if(data != player.persistentData.get("kath")){
         player.persistentData.put("kath", data);

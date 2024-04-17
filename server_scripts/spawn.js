@@ -70,6 +70,7 @@ BlockEvents.rightClicked((event) =>{
         if(!item.nbt?.spawn_tool) return;
         let team = item.nbt.team;
         let block = event.block;
+        let originalBlock = block.id;
         if(team){
             let foundTeam = TEAMS.find(t => t.name == team);
             if(!foundTeam) return;
@@ -78,8 +79,7 @@ BlockEvents.rightClicked((event) =>{
             let z = block.z;
 
             // Check if a spawn by this coordinates already exists
-            let foundSpawn = serverData.teamDesignationBlocks.find(s => s.x == x && s.y == y && s.z == z);
-            let originalBlock = block.id;
+            let foundSpawn = serverData.teamDesignationBlocks.find(s => s.x == x && s.y == y && s.z == z);;
             if(foundSpawn){
                 if(foundSpawn.team == team){
                     return;
@@ -113,6 +113,19 @@ BlockEvents.rightClicked((event) =>{
                 serverData.teamDesignationBlocks = serverData.teamDesignationBlocks.filter(s => s.x != x || s.y != y || s.z != z);
                 savePSData(serverData);
                 player.displayClientMessage(`Team Block at ${x}, ${y}, ${z} cleared!`, true)
+            }else{
+                serverData.teamDesignationBlocks.push({
+                    x:Math.floor(x),
+                    y:Math.floor(y),
+                    z:Math.floor(z),
+                    team:"noteam",
+                    original_block: originalBlock,
+                });
+                // Replace the block with concrete
+                block.set("minecraft:white_concrete");
+                
+                player.displayClientMessage(`Leave Team Block set to ${x}, ${y}, ${z}!`, true)
+                savePSData(serverData);
             }
         }
     }catch(e){

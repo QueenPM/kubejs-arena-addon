@@ -108,18 +108,18 @@ function leaveTeam(player, teamCommandAssigned){
     if(!team) return;
     
     if(!teamCommandAssigned) teamCommandAssigned = false;
-    server.runCommandSilent(`team join Spawn ${player.username}`);
-    pData.team = null;
+    delete pData.team;
     pData.teamCommandAssigned = teamCommandAssigned;
     savePlayerData(player, pData);
+    server.runCommandSilent(`team join Spawn ${player.username}`);
     
     player.displayClientMessage(`You've left your team and won't participate in the Arenas`, true)
     let msg = `${player.username} has left Team ${team}!`;
     notifyTeamPlayers(team, msg);
     if(getActiveArena()){
         server.runCommandSilent(`kill ${player.username}`);
-
     }
+
 }
 
 
@@ -171,13 +171,16 @@ ServerEvents.commandRegistry((event) => {
 
 // Change player team based on spawn blocks
 PlayerEvents.tick((event) => {
+    let player = event.player;
+    let server = event.server;
+
     try{
-        event.server.runCommandSilent(`effect give ${event.player.username} minecraft:saturation 1 255 true`)
+        server.runCommandSilent(`effect give ${player.username} minecraft:saturation 80 0 true`)
     }catch(e){
         print(e)
     }
     if(getActiveArena()) return; // Don't run if an arena is active
-    if(!event.server) return;
+    if(!server) return;
     let psData;
     try{
         psData = getPSData();
@@ -188,7 +191,6 @@ PlayerEvents.tick((event) => {
 
 
     let blocks = psData.teamDesignationBlocks;
-    let player = event.player;
 
     // Check if the player is inside one of the blocks
     let playerX = Math.floor(player.x);
@@ -204,11 +206,15 @@ PlayerEvents.tick((event) => {
     if(foundBlock){
         let team = foundBlock.team;
         if(!playerData.team || playerData.team != team){
-            joinTeam(player, team);
-        }
-    }else{
-        if(playerData.team && !playerData.teamCommandAssigned){
-            leaveTeam(player);
+            if(team == "noteam" && playerData.team){
+                leaveTeam(player);
+            }else if(team != "noteam"){
+                joinTeam(player, team);
+            }
         }
     }
 })
+
+function doPlayerChecks(player, server){
+
+}
