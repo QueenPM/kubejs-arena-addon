@@ -652,7 +652,7 @@ ServerEvents.tick((event)=>{
     }
 })
 
-let tick = 0;
+let ticks = 0;
 
 /**
  * Meant to be displayed every tick. Displays the current information on the server regarding Arena.s
