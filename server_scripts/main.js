@@ -2,6 +2,7 @@
  * @typedef {Object} ServerKathData
  * @property {Array<ArenaData>} arenas - The arenas in the server
  * @property {Array} teamDesignationBlocks - The teams in the server
+ * @property {Array<KitData>} kits - The kits in the server
  */
 
 /**
@@ -47,6 +48,8 @@ function getPSData(){
     if(!data.teamDesignationBlocks){
         data.teamDesignationBlocks = [];
     }
+
+    if(!data.kits) data.kits = [];
 
 
     server.persistentData.put("kath", data);

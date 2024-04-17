@@ -182,7 +182,7 @@ PlayerEvents.respawned((event)=>{
         if(!pData || !pData.team) return;
     
         if(pData.kit){
-            giveKit(event.player, pData.kit);
+            giveKit(pData.kit, event.player);
         }
         
         let activeArena = getActiveArena();
