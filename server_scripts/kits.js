@@ -71,7 +71,6 @@ function saveKit(name, player){
     for(let i = 0; i < slotLimit; i++){
         let item = player.inventory.getStackInSlot(i);
         if(item.id != "minecraft:air"){
-            print(`${i} ${item}`)
             itemsToSave.push({
                 item: {
                     id: item.id,
