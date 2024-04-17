@@ -150,3 +150,24 @@ function savePSData(data){
     if(!server) return;
     server.persistentData.put("kath", data);
 }
+
+/**
+ * Helper functiont o build buttons in chat
+ * @param {string} text 
+ * @param {*} color Decimal color code
+ * @param {string} command Minecraft command
+ */
+function chatButton(text, command, color){
+    if(!color){
+        color = "green"
+    }
+    return JSON.stringify({
+        text: `[${text}]`,
+        color: color,
+        bold: true,
+        clickEvent: {
+            action: "run_command",
+            value: command
+        }
+    })
+}
