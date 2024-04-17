@@ -2,9 +2,15 @@
  * @typedef {Object} ScoreboardData
  * @property {string} objective - Name of the scoreboard. No Spaces. This is used as an identifier in Minecraft
  * @property {string} displayName - Display Name of the scoreboard.
- * @property {string[]} lines - Array of lines to display on the scoreboard.
+ * @property {Array<ScoreboardLine>} lines - Array of lines to display on the scoreboard.
  * @property {"belowName"|"list"|"sidebar"} display - Minecraft setdisplay
  * @property {string} teamColor - For sidebar usage, if you want to restrict it to a team
+ */
+
+/**
+ * @typedef {Object} ScoreboardLine
+ * @property {string} text - Text to display
+ * @property {string} color - Color to display it in
  */
 
 /**
@@ -35,7 +41,7 @@ function displayScoreboard(scoreboard){
         // Create the individual lines for the scoreboard.
         let uniqueLastCharacters = [];
         for(let i = 0; i < scoreboard.lines.length; i++){
-            let line = scoreboard.lines[i].trim();
+            let line = scoreboard.lines[i].text.trim();
             let lastCharacter = '';
             let index = 1;
             do {
@@ -50,7 +56,7 @@ function displayScoreboard(scoreboard){
             commands.push(`scoreboard players set ${lastCharacter} ${objective} ${i}`);
             commands.push(`team add ${teamName}`);
             commands.push(`team join ${teamName} ${lastCharacter}`);
-            commands.push(`team modify ${teamName} color white`);
+            commands.push(`team modify ${teamName} color ${scoreboard.lines[i].color}`);
             commands.push(`team modify ${teamName} prefix {"text":"${line.substring(0, line.length - index + 1)}"}`);
         }
     

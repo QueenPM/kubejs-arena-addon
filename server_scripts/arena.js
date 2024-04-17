@@ -675,22 +675,30 @@ ServerEvents.tick((event)=>{
  * @returns 
  */
 function showArenaScoreboard(arena){
+    /**
+     * @type {Array<ScoreboardLine>}
+     */
     let lines = [
-        `No Arena is currently Active`,
-        `Start playing by using`,
-        `/arena start <arena>`
+        {text:`No Arena is currently Active`, color: "white"},
+        {text:`Start playing by using`, color: "white"},
+        {text:`/arena start <arena>`, color: "gray"}
     ];
     
     // If there is an Arena active, display the current points.
     if(arena){
         lines = [
-            `Current Arena: ${arena.name || "None"}`,
+            {text:`Current Arena: ${arena.name || "None"}`},
             // `Time Left: ${milisecondsToText(ARENA_TIMEOUT - (Date.now() - arena.active))}`,
         ];
         // Scoreboard
         let points = getAllPlayerPoints();
         for(let point of points){
-            lines.push(`${point.name}: ${point.points} pts`);
+            let team = getTeam(getPlayerData(point.player).team);
+            let color = "white"
+            if(team){
+                color = team.textColor;   
+            }
+            lines.push({text:`${point.name}: ${point.points} pts`, color: color});
         }
     }
 
