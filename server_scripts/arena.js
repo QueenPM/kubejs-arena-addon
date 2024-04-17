@@ -654,6 +654,11 @@ ServerEvents.tick((event)=>{
 
 let tick = 0;
 
+/**
+ * Meant to be displayed every tick. Displays the current information on the server regarding Arena.s
+ * @param {ArenaData} arena 
+ * @returns 
+ */
 function showArenaScoreboard(arena){
     tick++;
     if(tick == 21){
@@ -666,7 +671,7 @@ function showArenaScoreboard(arena){
         `/arena start <arena>`
     ];
 
-
+    // If there is an Arena active, display the current points.
     if(arena){
         lines = [
             `Current Arena: ${arena.name || "None"}`,
