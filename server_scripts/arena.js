@@ -260,6 +260,7 @@ EntityEvents.death((event)=>{
     let killerData = getPlayerData(killerPlayer);
     if(deadData.killStreak > 2){
         print(`§a${activeArena.name} §2> §f${killerTeamData?.colorCode}${killerPlayer.username} §fended ${deadTeamData.colorCode}${deadPlayer.username}§f's kill streak of §a${deadData.killStreak}§f!`)
+        event.server.runCommandSilent(`playsound minecraft.entity.lightning_bolt.thunder master @a`)
     }else{
         print(`§a${activeArena.name} §2> §f${killerTeamData?.colorCode}${killerPlayer.username} §fkilled ${deadTeamData.colorCode}${deadPlayer.username}`)
     }
