@@ -206,7 +206,7 @@ PlayerEvents.tick((event) => {
         
         let playerData = getPlayerData(player);
         if(!playerData) return;
-        if(foundBlock && foundBlock.y < playerY){
+        if(foundBlock && foundBlock.y < playerY && playerY < foundBlock.y + 5){
             let team = foundBlock.team;
             if(!playerData.team || playerData.team != team){
                 if(team == "noteam" && playerData.team){
