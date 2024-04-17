@@ -202,7 +202,7 @@ ServerEvents.commandRegistry((event) => {
             const pData = getPlayerData(c.source.player);
             if(!pData) return;
             c.source.player.inventory.clear()
-            pData.kit = null;
+            delete pData.kit
             savePlayerData(c.source.player, pData);
             c.source.player.displayClientMessage(Component.red('You\'ve unselected your kit!'), true);
             return 1
