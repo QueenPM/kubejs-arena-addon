@@ -23,6 +23,7 @@
  * @property {number} kills - Number of kills the player has
  * @property {number} deaths - Number of deaths the player has
  * @property {number} points - Number of points the player has
+ * @property {number} lastSelectedSlot - The last slot the player selected
  */
 
 // Quick func to print to console/server
@@ -99,6 +100,7 @@ function getPlayerData(player){
     if(data != player.persistentData.get("kath")){
         player.persistentData.put("kath", data);
     }
+    if(typeof data.lastSelectedSlot == "undefined") data.lastSelectedSlot = 0;
     return data;
 }
 

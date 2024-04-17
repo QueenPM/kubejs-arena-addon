@@ -178,7 +178,8 @@ function getActiveArena(){
 
 // Death events during an active arena
 EntityEvents.death((event)=>{
-    let deadPlayer = event.entity;
+    let deadPlayer =  event.server.getPlayer(event.entity.username);
+    if(!deadPlayer) return;
     let killerPlayer = event.source?.player;
 
     // If the player was not killed by a player
@@ -198,6 +199,7 @@ EntityEvents.death((event)=>{
     }
     
     deadData.deaths++;
+    deadData.lastSelectedSlot = deadPlayer.selectedSlot;
     savePlayerData(deadPlayer, deadData);
     let killerData = getPlayerData(killerPlayer);
     if(killerData){
@@ -205,7 +207,6 @@ EntityEvents.death((event)=>{
         killerData.points++;
         let missingHealth = 20 - Math.floor(killerPlayer.health);
         let regenerationDuration = Math.ceil(missingHealth * 1.2);
-        print(`${missingHealth} ${regenerationDuration}`)
         event.server.runCommandSilent(`effect give ${killerPlayer.username} minecraft:regeneration ${regenerationDuration} 1 true`);
         killerPlayer.playSound("minecraft:entity.experience_orb.pickup");
         killerPlayer.displayClientMessage(`§aYou've killed ${deadPlayer.username}`, true);
@@ -239,6 +240,10 @@ PlayerEvents.respawned((event)=>{
         if(teamData){
             event.server.runCommandSilent(`item replace entity ${event.player.username} armor.head with leather_helmet{display:{color:${teamData.decimalColor}},Unbreakable:1,AttributeModifiers:[{AttributeName:"generic.armor",Amount:15,Slot:head,Name:"generic.armor",UUID:[I;-124316,10165,22544,-20330]}]} 1`)
         }
+        
+        event.server.schedule(50, ()=>{
+            event.player.setSelectedSlot(pData.lastSelectedSlot);
+        })
 
     }catch(e){
         print(e)
