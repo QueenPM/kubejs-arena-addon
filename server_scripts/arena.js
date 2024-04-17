@@ -70,6 +70,7 @@ function stopActiveArena(){
                 data.points = 0;
                 savePlayerData(participatingPlayer, data);
             }
+            leaveTeam(participatingPlayer);
         }
 
         return true;
@@ -192,11 +193,13 @@ EntityEvents.death((event)=>{
     let deadData = getPlayerData(deadPlayer)
     if(!deadData || !deadData.team) return;
     
-    let teamData = getTeam(deadData.team);
-    if(teamData){
+    let deadTeamData = getTeam(deadData.team);
+    if(deadTeamData){
         event.server.runCommandSilent(`execute at @a run particle minecraft:end_rod ${deadPlayer.x} ${deadPlayer.y} ${deadPlayer.z} 0.5 0.5 0.5 0 100 normal @a`);
         event.server.runCommandSilent(`execute at @a run playsound minecraft:entity.arrow.hit_player master @a ${deadPlayer.x} ${deadPlayer.y} ${deadPlayer.z} 1 1 1`);
     }
+
+    let killerTeamData = getTeam(getPlayerData(killerPlayer).team);
     
     deadData.deaths++;
     deadData.lastSelectedSlot = deadPlayer.selectedSlot;
@@ -213,7 +216,7 @@ EntityEvents.death((event)=>{
         savePlayerData(killerPlayer, killerData);
     }
 
-    print(`${deadPlayer.username} was killed by ${killerPlayer.username}!`)
+    print(`§a${activeArena.name} §2> §f${killerTeamData?.colorCode}${killerPlayer.username} §fkilled ${deadTeamData.colorCode}${deadPlayer.username}`)
 })
 
 PlayerEvents.respawned((event)=>{
