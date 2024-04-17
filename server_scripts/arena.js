@@ -64,6 +64,12 @@ function stopActiveArena(){
             if(!theirPoint) continue;
             participatingPlayer.tell(`§a---------------------------------------`);
             participatingPlayer.tell(`§aYou achieved §6${theirPoint.points} §apoints!`);
+
+            let data = getPlayerData(participatingPlayer);
+            if(data){
+                data.points = 0;
+                savePlayerData(participatingPlayer, data);
+            }
         }
 
         return true;
@@ -173,7 +179,7 @@ function getActiveArena(){
 // Death events during an active arena
 EntityEvents.death((event)=>{
     let deadPlayer = event.entity;
-    let killerPlayer = event.source.player;
+    let killerPlayer = event.source?.player;
 
     // If the player was not killed by a player
     // or they killed themselves
@@ -181,10 +187,10 @@ EntityEvents.death((event)=>{
     // If there is no active arena
     let activeArena = getActiveArena();
     if(!activeArena) return;
-
+    
     let deadData = getPlayerData(deadPlayer)
     if(!deadData || !deadData.team) return;
-
+    
     let teamData = getTeam(deadData.team);
     if(teamData){
         event.server.runCommandSilent(`execute at @a run particle minecraft:end_rod ${deadPlayer.x} ${deadPlayer.y} ${deadPlayer.z} 0.5 0.5 0.5 0 100 normal @a`);
@@ -193,19 +199,20 @@ EntityEvents.death((event)=>{
     
     deadData.deaths++;
     savePlayerData(deadPlayer, deadData);
-    let killerData = getPlayerData(source.player);
+    let killerData = getPlayerData(killerPlayer);
     if(killerData){
         killerData.kills++;
         killerData.points++;
-        let missingHealth = 20 - source.player.health;
-        let regenerationDuration = Math.ceil(missingHealth * 1.6);
-        event.server.runCommandSilent(`effect give ${source.player.username} minecraft:regeneration ${regenerationDuration} 2 true`);
-        source.player.playSound("minecraft:entity.experience_orb.pickup");
-        source.player.displayClientMessage(`§aYou've killed ${deadPlayer.username}`, true);
-        savePlayerData(source.player, killerData);
+        let missingHealth = 20 - Math.floor(killerPlayer.health);
+        let regenerationDuration = Math.ceil(missingHealth * 1.2);
+        print(`${missingHealth} ${regenerationDuration}`)
+        event.server.runCommandSilent(`effect give ${killerPlayer.username} minecraft:regeneration ${regenerationDuration} 1 true`);
+        killerPlayer.playSound("minecraft:entity.experience_orb.pickup");
+        killerPlayer.displayClientMessage(`§aYou've killed ${deadPlayer.username}`, true);
+        savePlayerData(killerPlayer, killerData);
     }
 
-    print(`${deadPlayer.username} was killed by ${source.player.username}!`)
+    print(`${deadPlayer.username} was killed by ${killerPlayer.username}!`)
 })
 
 PlayerEvents.respawned((event)=>{
@@ -611,8 +618,12 @@ function milisecondsToText(miliseconds){
     }
 }
 
+let ticks = 0;
+
 // Tick event for arena related stuff
 ServerEvents.tick((event)=>{
+    if(ticks++ % 20 !== 0) return;
+    if(ticks > 1000000) ticks = 0;
     let server = Utils.getServer();
     if(!server) return;
     try{
@@ -627,8 +638,6 @@ ServerEvents.tick((event)=>{
             stopActiveArena();
             return;
         }else{
-            // Arena is active
-
             // Boss bar
             let color = currentColor;
             if(percentage <= 50 && currentColor !== "§e" && currentColor !== "§c"){
@@ -652,21 +661,18 @@ ServerEvents.tick((event)=>{
     }
 })
 
-let ticks = 0;
-
 /**
  * Meant to be displayed every tick. Displays the current information on the server regarding Arena.s
  * @param {ArenaData} arena 
  * @returns 
  */
 function showArenaScoreboard(arena){
-    if(ticks++ % 20 !== 0) return;
     let lines = [
         `No Arena is currently Active`,
         `Start playing by using`,
         `/arena start <arena>`
     ];
-
+    
     // If there is an Arena active, display the current points.
     if(arena){
         lines = [
@@ -679,6 +685,7 @@ function showArenaScoreboard(arena){
             lines.push(`${point.name}: ${point.points} pts`);
         }
     }
+
 
     displayScoreboard({
         objective: "arena",

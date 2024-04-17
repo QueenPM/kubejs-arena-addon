@@ -176,7 +176,6 @@ ServerEvents.commandRegistry((event) => {
 PlayerEvents.tick((event) => {
     let player = event.player;
     let server = event.server;
-
     try{
         server.runCommandSilent(`effect give ${player.username} minecraft:saturation 80 0 true`)
         if(getActiveArena()) return; // Don't run if an arena is active
