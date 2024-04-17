@@ -195,7 +195,7 @@ EntityEvents.death((event)=>{
     let teamData = getTeam(deadData.team);
     if(teamData){
         event.server.runCommandSilent(`execute at @a run particle minecraft:end_rod ${deadPlayer.x} ${deadPlayer.y} ${deadPlayer.z} 0.5 0.5 0.5 0 100 normal @a`);
-        event.server.runCommandSilent(`/execute at @a run playsound minecraft:entity.arrow.hit_player master @a ${deadPlayer.x} ${deadPlayer.y} ${deadPlayer.z} 1 1 1`);
+        event.server.runCommandSilent(`execute at @a run playsound minecraft:entity.arrow.hit_player master @a ${deadPlayer.x} ${deadPlayer.y} ${deadPlayer.z} 1 1 1`);
     }
     
     deadData.deaths++;
