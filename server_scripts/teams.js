@@ -178,7 +178,12 @@ PlayerEvents.tick((event) => {
     }
     if(getActiveArena()) return; // Don't run if an arena is active
     if(!event.server) return;
-    let psData = getPSData();
+    let psData;
+    try{
+        psData = getPSData();
+    }catch(e){
+        console.log(e)
+    }
     if(!psData) return;
 
 
