@@ -35,7 +35,10 @@ All you need to do is copy this folder's contents into your `kubejs` folder in y
 - `/spawn tools` - Gives you tools to designate locations for when players enter, they will automatically be assigned to Team Red/Blue. Useful for Lobbies/Hubs
 ### Kits
 - `/kit <kit_name>` - Clear's the player's inventory and gives them the kit's contents. This assigns them the kit and they'll get the kit contents back everytime they respawn.
+- `/kit save <kit_name>` - Saves your current inventory as a kit. If a kit already exists, it will be replaced.
+- `/kit delete <kit_name>` - Deletes a kit.
 - `/unkit` - Clears the player's inventory and removes the kit.
+
 
 ## License
 
