@@ -98,6 +98,15 @@ function stopActiveArena(){
 
         activeArena.active = 0;
         saveArenaData(activeArena);
+
+        // Replace all spawnpoints
+        for(const spawn of activeArena.spawns){
+            let block = server.overworld().getBlock(spawn.x, spawn.y, spawn.z);
+            let team = TEAMS.find(t => t.name == spawn.team);
+            if(!team) continue;
+
+            block.set(team.spawnBlock);
+        }
         return true;
     }
 }
@@ -193,6 +202,13 @@ function startArena(arenaName, player){
 
     // Play some dumbass thing
     // server.runCommandSilent(`execute as @a run playsound alexsmobs:april_fools_music_box music @s ~ ~ ~ 1 1 1`)
+
+    // Replace all spawnpoints to their original block
+    for(const spawn of arena.spawns){
+        let block = server.overworld().getBlock(spawn.x, spawn.y, spawn.z);
+        print(spawn.original_block)
+        block.set(spawn.original_block);
+    }
     return true;
 }
 
