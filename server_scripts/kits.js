@@ -161,6 +161,7 @@ ServerEvents.commandRegistry((event) => {
             return 1
         }))
     .then(Commands.literal('save')
+        .requires(s => s.hasPermission(2))
         .then(Commands.argument('name', Arguments.STRING.create(event))
             .executes(c => {
                 const name = Arguments.STRING.getResult(c, 'name');
@@ -169,6 +170,7 @@ ServerEvents.commandRegistry((event) => {
             })
         ))
     .then(Commands.literal('delete')
+    .requires(s => s.hasPermission(2))
         .then(Commands.argument('name', Arguments.STRING.create(event))
             .executes(c => {
                 const name = Arguments.STRING.getResult(c, 'name');
