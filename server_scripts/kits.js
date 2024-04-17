@@ -133,8 +133,7 @@ function giveKit(name, player){
                 }
             }
             let command = `item replace entity ${player.username} ${location} with ${item.item.id}${item.item.nbt?`${item.item.nbt}`:""} ${item.item.count||1}`
-            print(command)
-            player.server.runCommand(command)
+            player.server.runCommandSilent(command)
         }catch(e){
             print(e)
         }
