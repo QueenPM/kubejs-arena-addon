@@ -2,6 +2,28 @@
 // global var for the bossbar color. Used as a control to not spam the bossbar color change. Probably a better way to do this
 let currentColor = "§a";
 
+function getAllPlayerPoints(){
+    let server = Utils.getServer();
+    let players = server.getPlayers();
+    let points = [];
+    for(const player of players){
+        let pData = getPlayerData(player);
+        if(!pData) continue;
+        if(!pData.team) continue;
+
+        points.push({
+            name: player.username,
+            player: player,
+            points: pData.points
+        })
+    }
+
+    points.sort((a,b) => b.points - a.points);
+
+    return points;
+
+}
+
 /**
  * Stops the currently active arena
  * @returns 
@@ -24,15 +46,25 @@ function stopActiveArena(){
         server.runCommandSilent(`title @a title "§aEvent has concluded!"`);
         server.runCommandSilent(`title @a subtitle "Goodjob everyone!"`);
 
-        // Remove the scoreboard
-        server.runCommandSilent(`scoreboard objectives remove kills`);
-        server.runCommandSilent(`scoreboard objectives remove deathCount`);
-
         // Hide the bossbar
         server.runCommandSilent(`bossbar set minecraft:0 visible false`);
 
         // Give everyone the "Spawn" team
         server.runCommandSilent(`team join Spawn @a`);
+
+        let points = getAllPlayerPoints();
+        let players = points.map(p => p.player);
+        server.tell(`§2Arena §5${activeArena.name} §2has concluded!`);
+        server.tell(`§bHere are the results:`);
+        for(const point of points){
+            server.tell(`§c* ${point.name} achieved §6${point.points} §cpoints!`);
+        }
+        for(const participatingPlayer of players){
+            let theirPoint = points.find(p => p.player.username == participatingPlayer.username);
+            if(!theirPoint) continue;
+            participatingPlayer.tell(`§a---------------------------------------`);
+            participatingPlayer.tell(`§aYou achieved §6${theirPoint.points} §apoints!`);
+        }
 
         return true;
     }
@@ -104,10 +136,6 @@ function startArena(arenaName, player){
     server.runCommandSilent(`team modify Red deathMessageVisibility never`);
     server.runCommandSilent(`team modify Blue deathMessageVisibility never`);
 
-    // Create a scoreboard to track player kills
-    server.runCommandSilent(`scoreboard objectives add kills playerKillCount`);
-    server.runCommandSilent(`scoreboard objectives setdisplay sidebar kills`);
-
     // Send a title
     server.runCommandSilent(`title @a title "§aArena ${arenaName} started!"`);
     // server.runCommandSilent(`title @a subtitle "Kill everyone or be killed!"`);
@@ -144,36 +172,40 @@ function getActiveArena(){
 
 // Death events during an active arena
 EntityEvents.death((event)=>{
-    let entity = event.entity;
-    if(entity.type != "minecraft:player") return
+    let deadPlayer = event.entity;
+    let killerPlayer = event.source.player;
+
+    // If the player was not killed by a player
+    // or they killed themselves
+    if(!killerPlayer || deadPlayer.username === killerPlayer.username) return
+    // If there is no active arena
     let activeArena = getActiveArena();
     if(!activeArena) return;
 
-    let pData = getPlayerData(entity)
-    if(!pData || !pData.team) return;
+    let deadData = getPlayerData(deadPlayer)
+    if(!deadData || !deadData.team) return;
 
-    // If it was killed by a player, play a ding sound
-    let source = event.source;
-    if(source.player.username === entity.username) return;
-    let teamData = getTeam(pData.team);
+    let teamData = getTeam(deadData.team);
     if(teamData){
-        event.server.runCommandSilent(`execute at @a run particle minecraft:end_rod ${entity.x} ${entity.y} ${entity.z} 0.5 0.5 0.5 0 100 normal @a`);
-        event.server.runCommandSilent(`/execute at @a run playsound minecraft:entity.arrow.hit_player master @a ${entity.x} ${entity.y} ${entity.z} 1 1 1`);
+        event.server.runCommandSilent(`execute at @a run particle minecraft:end_rod ${deadPlayer.x} ${deadPlayer.y} ${deadPlayer.z} 0.5 0.5 0.5 0 100 normal @a`);
+        event.server.runCommandSilent(`/execute at @a run playsound minecraft:entity.arrow.hit_player master @a ${deadPlayer.x} ${deadPlayer.y} ${deadPlayer.z} 1 1 1`);
     }
-    source.player.playSound("minecraft:entity.experience_orb.pickup");
-
-    pData.deaths++;
-    savePlayerData(entity, pData);
+    
+    deadData.deaths++;
+    savePlayerData(deadPlayer, deadData);
     let killerData = getPlayerData(source.player);
     if(killerData){
         killerData.kills++;
+        killerData.points++;
         let missingHealth = 20 - source.player.health;
         let regenerationDuration = Math.ceil(missingHealth * 1.6);
         event.server.runCommandSilent(`effect give ${source.player.username} minecraft:regeneration ${regenerationDuration} 2 true`);
+        source.player.playSound("minecraft:entity.experience_orb.pickup");
+        source.player.displayClientMessage(`§aYou've killed ${deadPlayer.username}`, true);
         savePlayerData(source.player, killerData);
     }
 
-    print(`${entity.username} was killed by ${source.player.username}!`)
+    print(`${deadPlayer.username} was killed by ${source.player.username}!`)
 })
 
 PlayerEvents.respawned((event)=>{
@@ -352,7 +384,6 @@ ServerEvents.commandRegistry((event) => {
             .executes(c => {
                 let res = stopActiveArena();
                 if(res){
-                    c.source.player.tell('Arena stopped!');
                     return 1;
                 }else{
                     c.source.player.tell('No active arena found!');
@@ -586,7 +617,9 @@ ServerEvents.tick((event)=>{
     if(!server) return;
     try{
         let activeArena = getActiveArena();
+        showArenaScoreboard(activeArena, server);
         if(!activeArena) return;
+
     
         let timeLeft = ARENA_TIMEOUT - (Date.now() - activeArena.active);
         let percentage = timeLeft / ARENA_TIMEOUT * 100;
@@ -594,6 +627,9 @@ ServerEvents.tick((event)=>{
             stopActiveArena();
             return;
         }else{
+            // Arena is active
+
+            // Boss bar
             let color = currentColor;
             if(percentage <= 50 && currentColor !== "§e" && currentColor !== "§c"){
                 // If its less than 50%, make it yellow
@@ -615,3 +651,38 @@ ServerEvents.tick((event)=>{
         print(e)
     }
 })
+
+let tick = 0;
+
+function showArenaScoreboard(arena){
+    tick++;
+    if(tick == 21){
+        tick = 0;
+    }
+    if(tick%5 !== 0) return;
+    let lines = [
+        `No Arena is currently Active`,
+        `Start playing by using`,
+        `/arena start <arena>`
+    ];
+
+
+    if(arena){
+        lines = [
+            `Current Arena: ${arena.name || "None"}`,
+            // `Time Left: ${milisecondsToText(ARENA_TIMEOUT - (Date.now() - arena.active))}`,
+        ];
+        // Scoreboard
+        let points = getAllPlayerPoints();
+        for(let point of points){
+            lines.push(`${point.name}: ${point.points} pts`);
+        }
+    }
+
+    displayScoreboard({
+        objective: "arena",
+        displayName: "Arena",
+        lines: lines,
+        display: "sidebar"
+    })
+}

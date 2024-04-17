@@ -22,7 +22,7 @@
  * @property {boolean} teamCommandAssigned
  * @property {number} kills - Number of kills the player has
  * @property {number} deaths - Number of deaths the player has
- * @property {Object} coords - The coordinates of the player
+ * @property {number} points - Number of points the player has
  */
 
 // Quick func to print to console/server
@@ -94,7 +94,7 @@ function getPlayerData(player){
     if(!data.teamCommandAssigned) data.teamCommandAssigned = false;
     if(!data.kills) data.kills = 0;
     if(!data.deaths) data.deaths = 0;
-    if(!data.coords) data.coords = {x:player.x, y:player.y, z:player.z};
+    if(!data.points) data.points = 0;
 
     if(data != player.persistentData.get("kath")){
         player.persistentData.put("kath", data);

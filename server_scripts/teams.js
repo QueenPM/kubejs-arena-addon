@@ -1,6 +1,7 @@
 /**
  * @typedef {Object} TeamData
  * @property {string} name - The name of the team
+ * @property {string} textColor - The Minecraft Color Code for Text
  * @property {string} colorCode - The Minecraft Color Code for Text
  * @property {number} decimalColor - The decimal color code. Used for fireworks & other things
  * @property {string} block - Unused. This was used for right clicking to get a team. Might be re-used in the future. Perhaps replace the Team Designation blocks with this.
@@ -16,6 +17,7 @@ const TEAMS = [
     {
         name: "Blue",
         colorCode: "§9",
+        textColor: "blue",
         decimalColor: 255,
         block: "minecraft:blue_wool",
         spawnBlock: "minecraft:blue_concrete"
@@ -23,6 +25,7 @@ const TEAMS = [
     {
         name: "Red",
         colorCode: "§c",
+        textColor: "red",
         decimalColor: 16711680,
         block: "minecraft:red_wool",
         spawnBlock: "minecraft:red_concrete"
@@ -78,9 +81,8 @@ function joinTeam(player, team, teamCommandAssigned){
         
         // Create the minecraft team
         let teamName = foundTeam.name
-        let teamColor = foundTeam.colorCode;
         server.runCommandSilent(`team add ${teamName}`);
-        server.runCommandSilent(`team modify ${teamName} color ${teamColor}`);
+        server.runCommandSilent(`team modify ${teamName} color ${foundTeam.textColor}`);
         
         pData.team = foundTeam.name;
         if(!teamCommandAssigned) teamCommandAssigned = false;
@@ -169,6 +171,7 @@ ServerEvents.commandRegistry((event) => {
     );
 });
 
+
 // Change player team based on spawn blocks
 PlayerEvents.tick((event) => {
     let player = event.player;
@@ -176,45 +179,41 @@ PlayerEvents.tick((event) => {
 
     try{
         server.runCommandSilent(`effect give ${player.username} minecraft:saturation 80 0 true`)
-    }catch(e){
-        print(e)
-    }
-    if(getActiveArena()) return; // Don't run if an arena is active
-    if(!server) return;
-    let psData;
-    try{
-        psData = getPSData();
+        if(getActiveArena()) return; // Don't run if an arena is active
+        if(!server) return;
+        let psData;
+        try{
+            psData = getPSData();
+        }catch(e){
+            console.log(e)
+        }
+        if(!psData) return;
+    
+    
+        let blocks = psData.teamDesignationBlocks;
+    
+        // Check if the player is inside one of the blocks
+        let playerX = Math.floor(player.x);
+        let playerZ = Math.floor(player.z);
+    
+        let foundBlock = blocks.find(b => {
+            return b.x == playerX && b.z == playerZ;
+        });
+    
+        
+        let playerData = getPlayerData(player);
+        if(!playerData) return;
+        if(foundBlock){
+            let team = foundBlock.team;
+            if(!playerData.team || playerData.team != team){
+                if(team == "noteam" && playerData.team){
+                    leaveTeam(player);
+                }else if(team != "noteam"){
+                    joinTeam(player, team);
+                }
+            }
+        }
     }catch(e){
         console.log(e)
     }
-    if(!psData) return;
-
-
-    let blocks = psData.teamDesignationBlocks;
-
-    // Check if the player is inside one of the blocks
-    let playerX = Math.floor(player.x);
-    let playerZ = Math.floor(player.z);
-
-    let foundBlock = blocks.find(b => {
-        return b.x == playerX && b.z == playerZ;
-    });
-
-    
-    let playerData = getPlayerData(player);
-    if(!playerData) return;
-    if(foundBlock){
-        let team = foundBlock.team;
-        if(!playerData.team || playerData.team != team){
-            if(team == "noteam" && playerData.team){
-                leaveTeam(player);
-            }else if(team != "noteam"){
-                joinTeam(player, team);
-            }
-        }
-    }
 })
-
-function doPlayerChecks(player, server){
-
-}
