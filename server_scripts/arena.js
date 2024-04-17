@@ -68,6 +68,10 @@ function stopActiveArena(){
             let data = getPlayerData(participatingPlayer);
             if(data){
                 data.points = 0;
+                data.currentDeaths = 0;
+                data.currentKills = 0;
+                data.deathStreak = 0;
+                data.killStreak = 0;
                 savePlayerData(participatingPlayer, data);
             }
             leaveTeam(participatingPlayer);
@@ -119,6 +123,12 @@ function startArena(arenaName, player){
         if(pData.team){
             server.runCommandSilent(`team join ${pData.team} ${player.username}`);
         }
+        pData.currentDeaths = 0;
+        pData.deathStreak = 0;
+        pData.killStreak = 0;
+        pData.currentKills = 0;
+        pData.points = 0;
+        savePlayerData(player, pData);
     }
 
     // Set gamerules
@@ -202,21 +212,40 @@ EntityEvents.death((event)=>{
     let killerTeamData = getTeam(getPlayerData(killerPlayer).team);
     
     deadData.deaths++;
+    deadData.currentDeaths++;
+    deadData.deathStreak++;
+    
     deadData.lastSelectedSlot = deadPlayer.selectedSlot;
-    savePlayerData(deadPlayer, deadData);
+    if(deadData.deathStreak > 4){
+        print(`${deadTeamData.colorCode}${deadPlayer.username} §8is on a §c${deadData.deathStreak} §8death streak!`)
+    }
+    
     let killerData = getPlayerData(killerPlayer);
+    if(deadData.killStreak > 2){
+        print(`§a${activeArena.name} §2> §f${killerTeamData?.colorCode}${killerPlayer.username} §fended ${deadTeamData.colorCode}${deadPlayer.username}§f's kill streak of §a${deadData.killStreak}§f!`)
+    }else{
+        print(`§a${activeArena.name} §2> §f${killerTeamData?.colorCode}${killerPlayer.username} §fkilled ${deadTeamData.colorCode}${deadPlayer.username}`)
+    }
     if(killerData){
         killerData.kills++;
+        killerData.currentKills++;
+        killerData.killStreak++;
+        killerData.deathStreak = 0;
         killerData.points++;
         let missingHealth = 20 - Math.floor(killerPlayer.health);
         let regenerationDuration = Math.ceil(missingHealth * 1.2);
         event.server.runCommandSilent(`effect give ${killerPlayer.username} minecraft:regeneration ${regenerationDuration} 1 true`);
         killerPlayer.playSound("minecraft:entity.experience_orb.pickup");
         killerPlayer.displayClientMessage(`§aYou've killed ${deadPlayer.username}`, true);
-        savePlayerData(killerPlayer, killerData);
+        if(killerData.killStreak > 2){
+            event.server.runCommandSilent(`title @a actionbar "${killerPlayer.username} is on a §a${killerData.killStreak} kill streak!"`);
+            print(`${killerTeamData.colorCode}${killerPlayer.username} §ais on a §a${killerData.killStreak} §akill streak!`)
+        }
     }
 
-    print(`§a${activeArena.name} §2> §f${killerTeamData?.colorCode}${killerPlayer.username} §fkilled ${deadTeamData.colorCode}${deadPlayer.username}`)
+    deadData.killStreak = 0;
+    savePlayerData(deadPlayer, deadData);
+    savePlayerData(killerPlayer, killerData);
 })
 
 PlayerEvents.respawned((event)=>{

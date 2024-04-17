@@ -21,8 +21,14 @@
  * @property {string|null} team - Name of the team the player is in
  * @property {boolean} teamCommandAssigned
  * @property {number} kills - Number of kills the player has
+ * @property {number} currentKills - Number of kills the player has in the currently participating arena
+ * @property {number} killStreak - Player's kill streak
  * @property {number} deaths - Number of deaths the player has
+ * @property {number} deathStreak - Player's death streak
+ * @property {number} currentDeaths - Number of deaths the player has in the currently participating arena
  * @property {number} points - Number of points the player has
+ * @property {number} singleWins = Number of single wins the player has when they were alone in a team
+ * @property {number} teamWins = Number of team wins the player has when they were in a team
  * @property {number} lastSelectedSlot - The last slot the player selected
  */
 
@@ -40,18 +46,9 @@ function getPSData(){
     let server = Utils.getServer();
     if(!server) return;
     let data = server.persistentData.get("kath");
-    if(!data){
-        data = {}
-    }
-
-    if(!data.arenas){
-        data.arenas = [];
-    }
-
-    if(!data.teamDesignationBlocks){
-        data.teamDesignationBlocks = [];
-    }
-
+    if(!data) data = {}
+    if(!data.arenas) data.arenas = [];
+    if(!data.teamDesignationBlocks) data.teamDesignationBlocks = [];
     if(!data.kits) data.kits = [];
 
 
@@ -94,8 +91,15 @@ function getPlayerData(player){
     }
     if(!data.teamCommandAssigned) data.teamCommandAssigned = false;
     if(!data.kills) data.kills = 0;
+    if(!data.currentKills) data.currentKills = 0;
+    if(!data.killStreak) data.killStreak = 0;
     if(!data.deaths) data.deaths = 0;
+    if(!data.currentDeaths) data.currentDeaths = 0;
+    if(!data.deathStreak) data.deathStreak = 0;
     if(!data.points) data.points = 0;
+
+    if(!data.singleWins) data.singleWins = 0;
+    if(!data.teamWins) data.teamWins = 0;
 
     if(data != player.persistentData.get("kath")){
         player.persistentData.put("kath", data);
