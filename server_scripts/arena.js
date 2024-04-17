@@ -32,8 +32,6 @@ function stopActiveArena(){
     let activeArena = getActiveArena();
     let server = Utils.getServer();
     if(activeArena && server){
-        activeArena.active = 0;
-        saveArenaData(activeArena);
         // Kill every player who has a team
         server.runCommandSilent(`kill @a[team=Red]`);
         server.runCommandSilent(`kill @a[team=Blue]`);
@@ -56,9 +54,17 @@ function stopActiveArena(){
         let players = points.map(p => p.player);
         server.tell(`§2Arena §5${activeArena.name} §2has concluded!`);
         server.tell(`§bHere are the results:`);
+        let teamPoints = {};
         for(const point of points){
             server.tell(`§c* ${point.name} achieved §6${point.points} §cpoints!`);
+            let team = getPlayerData(point.player).team;
+            if(!team) continue;
+            if(!teamPoints[team]) teamPoints[team] = 0;
+            teamPoints[team] += point.points;
         }
+
+        let winningTeam = Object.keys(teamPoints).reduce((a, b) => teamPoints[a] > teamPoints[b] ? a : b);
+
         for(const participatingPlayer of players){
             let theirPoint = points.find(p => p.player.username == participatingPlayer.username);
             if(!theirPoint) continue;
@@ -72,11 +78,26 @@ function stopActiveArena(){
                 data.currentKills = 0;
                 data.deathStreak = 0;
                 data.killStreak = 0;
+
+                data.arenaParticipation++;
+
+                let team = participatingPlayer.team;
+                if(team == winningTeam){
+                    let teamSize = players.filter(p => p.team == team).length;
+                    if(teamSize == 1){
+                        data.singleWins++;
+                    }else if(teamSize > 1){
+                        data.teamWins++;
+                    }
+                }
                 savePlayerData(participatingPlayer, data);
             }
+
             leaveTeam(participatingPlayer);
         }
 
+        activeArena.active = 0;
+        saveArenaData(activeArena);
         return true;
     }
 }

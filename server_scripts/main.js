@@ -30,6 +30,7 @@
  * @property {number} singleWins = Number of single wins the player has when they were alone in a team
  * @property {number} teamWins = Number of team wins the player has when they were in a team
  * @property {number} lastSelectedSlot - The last slot the player selected
+ * @property {number} arenaParticipation - The number of times the player has participated in an arena
  */
 
 // Quick func to print to console/server
@@ -97,6 +98,8 @@ function getPlayerData(player){
     if(!data.currentDeaths) data.currentDeaths = 0;
     if(!data.deathStreak) data.deathStreak = 0;
     if(!data.points) data.points = 0;
+
+    if(!data.arenaParticipation) data.arenaParticipation = 0;
 
     if(!data.singleWins) data.singleWins = 0;
     if(!data.teamWins) data.teamWins = 0;
