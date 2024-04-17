@@ -6,6 +6,7 @@
  * @property {number} decimalColor - The decimal color code. Used for fireworks & other things
  * @property {string} block - Unused. This was used for right clicking to get a team. Might be re-used in the future. Perhaps replace the Team Designation blocks with this.
  * @property {string} spawnBlock - Minecraft Block ID for the block to be used for Team Spawns
+ * @property {string} teamDesignationBlock - Minecraft Block ID for the block to be used for Team Designation
  */
 
 /**
@@ -20,7 +21,8 @@ const TEAMS = [
         textColor: "blue",
         decimalColor: 255,
         block: "minecraft:blue_wool",
-        spawnBlock: "minecraft:blue_concrete"
+        spawnBlock: "minecraft:blue_concrete",
+        teamDesignationBlock: "securitycraft:reinforced_blue_stained_glass"
     },
     {
         name: "Red",
@@ -28,7 +30,8 @@ const TEAMS = [
         textColor: "red",
         decimalColor: 16711680,
         block: "minecraft:red_wool",
-        spawnBlock: "minecraft:red_concrete"
+        spawnBlock: "minecraft:red_concrete",
+        teamDesignationBlock: "securitycraft:reinforced_red_stained_glass"
     }
 ]
 // TODO this probably doesnt get used in places where it needs to be.
@@ -90,8 +93,8 @@ function joinTeam(player, team, teamCommandAssigned){
         savePlayerData(player, pData);
 
         player.displayClientMessage(`${foundTeam.colorCode}You'll be participating as ${team}!`, true)
-        let msg = `${foundTeam.colorCode}${player.username} has joined Team ${foundTeam.name}!`;
-        notifyTeamPlayers(foundTeam, msg);
+        // let msg = `${foundTeam.colorCode}${player.username} has joined Team ${foundTeam.name}!`;
+        // notifyTeamPlayers(foundTeam, msg);
         return foundTeam;
     }
 }
@@ -116,8 +119,8 @@ function leaveTeam(player, teamCommandAssigned){
     server.runCommandSilent(`team join Spawn ${player.username}`);
     
     player.displayClientMessage(`You've left your team and won't participate in the Arenas`, true)
-    let msg = `${player.username} has left Team ${team}!`;
-    notifyTeamPlayers(team, msg);
+    // let msg = `${player.username} has left Team ${team}!`;
+    // notifyTeamPlayers(team, msg);
     if(getActiveArena()){
         server.runCommandSilent(`kill ${player.username}`);
     }
@@ -194,6 +197,7 @@ PlayerEvents.tick((event) => {
         // Check if the player is inside one of the blocks
         let playerX = Math.floor(player.x);
         let playerZ = Math.floor(player.z);
+        let playerY = Math.floor(player.y);
     
         let foundBlock = blocks.find(b => {
             return b.x == playerX && b.z == playerZ;
@@ -202,7 +206,7 @@ PlayerEvents.tick((event) => {
         
         let playerData = getPlayerData(player);
         if(!playerData) return;
-        if(foundBlock){
+        if(foundBlock && foundBlock.y < playerY){
             let team = foundBlock.team;
             if(!playerData.team || playerData.team != team){
                 if(team == "noteam" && playerData.team){

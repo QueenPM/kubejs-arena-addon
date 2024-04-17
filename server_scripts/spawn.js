@@ -96,7 +96,7 @@ BlockEvents.rightClicked((event) =>{
                 original_block: originalBlock,
             });
             // Replace the block with concrete
-            block.set(foundTeam.spawnBlock);
+            block.set(foundTeam.teamDesignationBlock);
             
             player.displayClientMessage(`${foundTeam.colorCode}Team Block for ${team} set to ${x}, ${y}, ${z}!`, true)
             savePSData(serverData);
@@ -122,7 +122,7 @@ BlockEvents.rightClicked((event) =>{
                     original_block: originalBlock,
                 });
                 // Replace the block with concrete
-                block.set("minecraft:white_concrete");
+                block.set("securitycraft:reinforced_white_stained_glass");
                 
                 player.displayClientMessage(`Leave Team Block set to ${x}, ${y}, ${z}!`, true)
                 savePSData(serverData);
