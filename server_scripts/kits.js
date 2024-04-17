@@ -114,7 +114,6 @@ function giveKit(name, player){
     if(!foundKit) return false;
     let items = foundKit.items
     player.inventory.clear();
-    print(items.length)
     for(const item of items){
         try{
             let slot = item.slot;
