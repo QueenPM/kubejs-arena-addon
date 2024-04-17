@@ -542,17 +542,17 @@ ServerEvents.commandRegistry((event) => {
                         c.source.player.tell('Arena not found!');
                         return 1;
                     }
+                    if(arena.spawns.length > 0){
+                        let spawn = arena.spawns[0];
+                        c.source.player.teleportTo(spawn.x+0.5, spawn.y+1, spawn.z+0.5);
+                        return 1;
+                    }
                     if(arena.corner1 || arena.corner2){
                         let corner1 = arena.corner1;
                         let corner2 = arena.corner2;
                         let x = Math.floor((corner1.x + corner2.x) / 2);
                         let z = Math.floor((corner1.z + corner2.z) / 2);
                         c.source.player.teleportTo(x, 100, z);
-                        return 1;
-                    }
-                    if(arena.spawns.length > 0){
-                        let spawn = arena.spawns[0];
-                        c.source.player.teleportTo(spawn.x, spawn.y, spawn.z);
                         return 1;
                     }
 
