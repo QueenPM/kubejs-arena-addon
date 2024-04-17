@@ -221,8 +221,8 @@ function createArena(name){
         /** @type {ArenaData} */
         let data =  {
             name: name,
-            corner1: null,
-            corner2: null,
+            // corner1: null,
+            // corner2: null,
             spawns: [],
             active: 0
         };
