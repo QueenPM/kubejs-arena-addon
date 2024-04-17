@@ -271,6 +271,7 @@ EntityEvents.death((event)=>{
         killerData.points++;
         let missingHealth = 20 - Math.floor(killerPlayer.health);
         let regenerationDuration = Math.ceil(missingHealth * 1.2);
+        event.server.runCommandSilent(`effect clear ${killerPlayer.username} minecraft:regeneration`);
         event.server.runCommandSilent(`effect give ${killerPlayer.username} minecraft:regeneration ${regenerationDuration} 1 true`);
         killerPlayer.playSound("minecraft:entity.experience_orb.pickup");
         killerPlayer.displayClientMessage(`§aYou've killed ${deadPlayer.username}`, true);
