@@ -371,6 +371,7 @@ PlayerEvents.respawned((event)=>{
         
         event.server.schedule(50, ()=>{
             event.player.setSelectedSlot(pData.lastSelectedSlot);
+            event.player.setInvulnerable(false);
         })
 
     }catch(e){
