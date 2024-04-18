@@ -68,7 +68,7 @@ function playerNameToUUID(name){
     if(!server) return null;
     let player = server.getPlayer(name);
     if(player){
-        return player.uuid;
+        return player.getStringUuid();
     }
 
     return null;
@@ -176,9 +176,9 @@ function savePlayerData(player, data){
 function getArenaData(arenaName){
     let psData = getPSData();
     if(!psData) return undefined;
-    let arena = psData.arenas.find(a => a.name == arenaName);
+    let arena = psData.arenas.find(a => a.name.toLowerCase() == arenaName.toLowerCase());
     if(!arena){
-        arena = {};
+        return undefined;
     }
 
     if(!arena.name) arena.name = arenaName;

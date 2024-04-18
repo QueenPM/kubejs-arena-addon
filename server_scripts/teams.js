@@ -73,10 +73,6 @@ function joinTeam(player, team){
     if(!pData) return false;
     let foundTeam = TEAMS.find(t => t.name.toLowerCase() == team.toLowerCase());
     if(!foundTeam) return false;
-    if(getActiveArena()){
-        player.tell('You can\'t join a team while an Arena is active!');
-        return false;
-    }
     
     if(pData.team === foundTeam.name){
         return 1;
@@ -112,16 +108,16 @@ function leaveTeam(player){
     if(!team) return;
     
     delete pData.team;
-    savePlayerData(player, pData);
     server.runCommandSilent(`team join Spawn ${player.username}`);
     
     player.displayClientMessage(`You've left your team and won't participate in the Arenas`, true)
     // let msg = `${player.username} has left Team ${team}!`;
     // notifyTeamPlayers(team, msg);
-    if(getActiveArena()){
+    if(pData.arena){
         server.runCommandSilent(`kill ${player.username}`);
+        delete pData.arena
     }
-
+    savePlayerData(player, pData);
 }
 
 
@@ -174,12 +170,11 @@ ServerEvents.commandRegistry((event) => {
 
 // Change player team based on spawn blocks
 PlayerEvents.tick((event) => {
+    if(event.server.getTickCount() % 20 != 0) return;
     let player = event.player;
     let server = event.server;
     try{
         server.runCommandSilent(`effect give ${player.username} minecraft:saturation 80 0 true`)
-        if(getActiveArena()) return; // Don't run if an arena is active
-        if(!server) return;
         let psData;
         try{
             psData = getPSData();
@@ -187,7 +182,10 @@ PlayerEvents.tick((event) => {
             console.log(e)
         }
         if(!psData) return;
-    
+        let playerData = getPlayerData(player.username);
+        if(!playerData) return;
+        if(playerData.arena) return; // Don't run if an arena is active
+        if(!server) return;
     
         let blocks = psData.teamDesignationBlocks;
     
@@ -201,8 +199,6 @@ PlayerEvents.tick((event) => {
         });
     
         
-        let playerData = getPlayerData(player.username);
-        if(!playerData) return;
         if(foundBlock && foundBlock.y < playerY && playerY < foundBlock.y + 5){
             let team = foundBlock.team;
             if(!playerData.team || playerData.team != team){

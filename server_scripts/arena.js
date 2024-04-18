@@ -35,7 +35,18 @@ function getAllPlayerPoints(){
 function getPlayersInArena(arenaName){
     let arena = getArenaData(arenaName);
     if(!arena) return [];
-
+    let server = Utils.getServer();
+    if(!server) return [];
+    let players = server.getPlayers();
+    let arenaPlayers = [];
+    for(const player of players){
+        let pData = getPlayerData(player.username);
+        if(!pData) continue;
+        if(pData.arena == arenaName){
+            arenaPlayers.push(player);
+        }
+    }
+    return arenaPlayers;
 }
 
 /**
@@ -61,7 +72,7 @@ function getAvailablePlayers(){
  * @returns 
  */
 function stopActiveArena(){
-    let activeArena = getActiveArena();
+    let activeArena = getActiveArenas()[0];
     let server = Utils.getServer();
     if(activeArena && server){
         // Kill every player who has a team
@@ -83,50 +94,54 @@ function stopActiveArena(){
         server.runCommandSilent(`team join Spawn @a`);
 
         let points = getAllPlayerPoints();
-        let players = points.map(p => p.player);
+        let players = getPlayersInArena(activeArena.name);
         server.tell(`§2Arena §5${activeArena.name} §2has concluded!`);
-        server.tell(`§bHere are the results:`);
-        let teamPoints = {};
-        for(const point of points){
-            server.tell(`§c* ${point.name} achieved §6${point.points} §cpoints!`);
-            let team = getPlayerData(point.player.username).team;
-            if(!team) continue;
-            if(!teamPoints[team]) teamPoints[team] = 0;
-            teamPoints[team] += point.points;
-        }
 
-        let winningTeam = Object.keys(teamPoints).reduce((a, b) => teamPoints[a] > teamPoints[b] ? a : b);
-
-        for(const participatingPlayer of players){
-            let theirPoint = points.find(p => p.player.username == participatingPlayer.username);
-            if(!theirPoint) continue;
-            participatingPlayer.tell(`§a---------------------------------------`);
-            participatingPlayer.tell(`§aYou achieved §6${theirPoint.points} §apoints!`);
-
-            let data = getPlayerData(participatingPlayer.username);
-            if(data){
-                data.points = 0;
-                data.currentDeaths = 0;
-                data.currentKills = 0;
-                data.deathStreak = 0;
-                data.killStreak = 0;
-                delete data.arena
-                data.arenaParticipation++;
-
-                let team = participatingPlayer.team;
-                if(team == winningTeam){
-                    let teamSize = players.filter(p => p.team == team).length;
-                    if(teamSize == 1){
-                        data.singleWins++;
-                    }else if(teamSize > 1){
-                        data.teamWins++;
-                    }
-                }
-                savePlayerData(participatingPlayer, data);
+        if(players.length > 0){
+            server.tell(`§bHere are the results:`);
+            let teamPoints = {};
+            for(const point of points){
+                server.tell(`§c* ${point.name} achieved §6${point.points} §cpoints!`);
+                let team = getPlayerData(point.player.username).team;
+                if(!team) continue;
+                if(!teamPoints[team]) teamPoints[team] = 0;
+                teamPoints[team] += point.points;
             }
-
-            leaveTeam(participatingPlayer);
+    
+            let winningTeam = teamPoints ? Object.keys(teamPoints).reduce((a, b) => teamPoints[a] > teamPoints[b] ? a : b) : null;
+    
+            for(const participatingPlayer of players){
+                let theirPoint = points.find(p => p.player.username == participatingPlayer.username);
+                if(!theirPoint) continue;
+                participatingPlayer.tell(`§a---------------------------------------`);
+                participatingPlayer.tell(`§aYou achieved §6${theirPoint.points} §apoints!`);
+    
+                let data = getPlayerData(participatingPlayer.username);
+                if(data){
+                    data.points = 0;
+                    data.currentDeaths = 0;
+                    data.currentKills = 0;
+                    data.deathStreak = 0;
+                    data.killStreak = 0;
+                    delete data.arena
+                    data.arenaParticipation++;
+    
+                    let team = participatingPlayer.team;
+                    if(team == winningTeam){
+                        let teamSize = players.filter(p => p.team == team).length;
+                        if(teamSize == 1){
+                            data.singleWins++;
+                        }else if(teamSize > 1){
+                            data.teamWins++;
+                        }
+                    }
+                    savePlayerData(participatingPlayer, data);
+                }
+    
+                leaveTeam(participatingPlayer);
+            }
         }
+
 
         activeArena.players = [];
         activeArena.active = 0;
@@ -160,24 +175,28 @@ function startArena(arenaName, player){
         return;
     }
 
-    // // Check if the arena has both corners set
-    // if(!arena.corner1 || !arena.corner2) return;
+    if(arena.active > 0){
+        player.tell("Arena is already active!");
+        return;
+    }
 
+    let availablePlayers = getAvailablePlayers();
+    if(availablePlayers.length < 1){
+        player.tell("Not enough players to start the arena!");
+        return;
+    }
+
+    
     // Check if the arena has spawns for at least two teams
     let redSpawns = arena.spawns.filter(s => s.team == "Red");
     let blueSpawns = arena.spawns.filter(s => s.team == "Blue");
     if(redSpawns.length == 0 || blueSpawns.length == 0){
         player.tell("Arena needs at least one spawn for each team!");
         return;
-    }
-
-    let activeArena = getActiveArena();
-    if(activeArena){
-        stopActiveArena();
-    }
-
+    }    
+    
     currentColor = "§a";
-
+    
     // Get all online players who are available to play
     let players = getAvailablePlayers();
     for(const player of players){
@@ -194,7 +213,7 @@ function startArena(arenaName, player){
         pData.currentKills = 0;
         pData.points = 0;
         pData.arena = arenaName;
-        arena.players.push(player.uuid);
+        arena.players.push(player.getStringUuid());
         savePlayerData(player, pData);
     }
 
@@ -250,13 +269,13 @@ function startArena(arenaName, player){
 
 
 /**
- * Finds and returns the currently active arena
- * @returns {ArenaData|undefined}
+ * Finds and returns the currently active arenas
+ * @returns {Array<ArenaData>|undefined}
  */
-function getActiveArena(){
+function getActiveArenas(){
     let arenas = getAllArenas();
     if(!arenas) return;
-    return arenas.find((a)=>a.active > 0)
+    return arenas.filter((a)=>a.active > 0)
 }
 
 
@@ -265,16 +284,17 @@ EntityEvents.death((event)=>{
     let deadPlayer =  event.server.getPlayer(event.entity.username);
     if(!deadPlayer) return;
     let killerPlayer = event.source?.player;
+    let deadData = getPlayerData(deadPlayer.username)
+    if(!deadData || !deadData.arena) return;
 
     // If the player was not killed by a player
     // or they killed themselves
     if(!killerPlayer || deadPlayer.username === killerPlayer.username) return
-    // If there is no active arena
-    let activeArena = getActiveArena();
+
+    // Get the arena data
+    let activeArena = getArenaData(deadData.arena);
     if(!activeArena) return;
     
-    let deadData = getPlayerData(deadPlayer.username)
-    if(!deadData || !deadData.team) return;
     
     let deadTeamData = getTeam(deadData.team);
     if(deadTeamData){
@@ -326,13 +346,13 @@ EntityEvents.death((event)=>{
 PlayerEvents.respawned((event)=>{
     try{
         let pData = getPlayerData(event.player.username);
-        if(!pData || !pData.team) return;
+        if(!pData || !pData.arena) return;
     
         if(pData.kit){
             giveKit(pData.kit, event.player);
         }
         
-        let activeArena = getActiveArena();
+        let activeArena = getArenaData(pData.arena);
         if(!activeArena) return;
         // Check if the player should respawn in an arena
         let team = pData.team;
@@ -359,26 +379,24 @@ PlayerEvents.respawned((event)=>{
 
 /**
  * Helper function for creating an arena with a name
- * @param {*} name 
+ * @param {string} name 
+ * @param {Internal.ServerPlayer} player
  * @returns 
  */
-function createArena(name){
+function createArena(name, player){
     try{
         let arena = getArenaData(name);
         if(arena){
+            player.tell('Arena already exists! Use /arena config to configure it.');
             return false;
         }
     
         /** @type {ArenaData} */
         let data =  {
-            name: name,
-            // corner1: null,
-            // corner2: null,
-            spawns: [],
-            active: 0
+            name: name
         };
-
         saveArenaData(data);
+        data = getArenaData(name);
         return data;
     }catch(e){
         print(e)
@@ -457,12 +475,11 @@ ServerEvents.commandRegistry((event) => {
                 .executes(c => {
                     let name = Arguments.STRING.getResult(c, 'name');
                     try{
-                        let res = createArena(name);
+                        let res = createArena(name, c.source.player);
                         if(res){
                             giveArenaTools(c.source.player, name);
                             return 1;
                         }else{
-                            c.source.player.tell('Arena already exists! Use /arena config to configure it.');
                             return 1;
                         }
                     }catch(e){
@@ -691,6 +708,7 @@ BlockEvents.broken((event)=>{
         let block = event.block;
         let arenas = getAllArenas();
         for(const arena of arenas){
+            if(!arena.spawns) continue;
             let foundSpawn = arena.spawns.find(s => s.x == block.x && s.y == block.y && s.z == block.z);
             if(foundSpawn){
                 let spawnBlock = TEAMS.find(t => t.name == foundSpawn.team).spawnBlock
@@ -737,39 +755,45 @@ ServerEvents.tick((event)=>{
     let server = Utils.getServer();
     if(!server) return;
     try{
-        let activeArena = getActiveArena();
-        showArenaScoreboard(activeArena, server);
-        if(!activeArena) return;
-
-    
-        let timeLeft = ARENA_TIMEOUT - (Date.now() - activeArena.active);
-        let percentage = timeLeft / ARENA_TIMEOUT * 100;
-        if(timeLeft <= 0){
-            stopActiveArena();
-            return;
-        }else{
-            // Boss bar
-            let color = currentColor;
-            if(percentage <= 50 && currentColor !== "§e" && currentColor !== "§c"){
-                // If its less than 50%, make it yellow
-                server.runCommandSilent(`bossbar set minecraft:0 color yellow`);
-                server.runCommandSilent(`execute as @a run playsound minecraft:block.note_block.bass master @s ~ ~ ~ 1 1 1`);
-                color = "§e";
-                currentColor = "§e";
-            }else if(percentage <= 10 && currentColor !== "§c"){
-                // If the time remaining is 10%, then make it red
-                server.runCommandSilent(`bossbar set minecraft:0 color red`);
-                server.runCommandSilent(`execute as @a run playsound minecraft:block.note_block.banjo master @s ~ ~ ~ 1 1 1`);
-                color = "§c";
-                currentColor = "§c";
-            }
-            server.runCommandSilent(`bossbar set minecraft:0 name "§fTime left: ${color}${milisecondsToText(timeLeft)}!"`);
-            server.runCommandSilent(`bossbar set minecraft:0 value ${Math.round(timeLeft / ARENA_TIMEOUT * 100)}`);
+        let activeArenas = getActiveArenas();
+        for(const arena of activeArenas){
+            activeArenaTickEvent(arena, server);
         }
     }catch(e){
         print(e)
     }
 })
+
+function activeArenaTickEvent(arena, server){
+    showArenaScoreboard(arena, server);
+    if(!arena) return;
+
+
+    let timeLeft = ARENA_TIMEOUT - (Date.now() - arena.active);
+    let percentage = timeLeft / ARENA_TIMEOUT * 100;
+    if(timeLeft <= 0){
+        stopActiveArena();
+        return;
+    }else{
+        // Boss bar
+        let color = currentColor;
+        if(percentage <= 50 && currentColor !== "§e" && currentColor !== "§c"){
+            // If its less than 50%, make it yellow
+            server.runCommandSilent(`bossbar set minecraft:0 color yellow`);
+            server.runCommandSilent(`execute as @a run playsound minecraft:block.note_block.bass master @s ~ ~ ~ 1 1 1`);
+            color = "§e";
+            currentColor = "§e";
+        }else if(percentage <= 10 && currentColor !== "§c"){
+            // If the time remaining is 10%, then make it red
+            server.runCommandSilent(`bossbar set minecraft:0 color red`);
+            server.runCommandSilent(`execute as @a run playsound minecraft:block.note_block.banjo master @s ~ ~ ~ 1 1 1`);
+            color = "§c";
+            currentColor = "§c";
+        }
+        server.runCommandSilent(`bossbar set minecraft:0 name "§fTime left: ${color}${milisecondsToText(timeLeft)}!"`);
+        server.runCommandSilent(`bossbar set minecraft:0 value ${Math.round(timeLeft / ARENA_TIMEOUT * 100)}`);
+    }
+}
 
 /**
  * Meant to be displayed every tick. Displays the current information on the server regarding Arena.s
