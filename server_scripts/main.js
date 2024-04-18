@@ -103,16 +103,6 @@ ServerEvents.loaded((event)=>{
     getPSData();
 })
 
-// When a player spawns in, always assign the "Spawn" team to them and put them back into spawn
-// PlayerEvents.loggedIn((event) => {
-//     let data = getPlayerData(event.player);
-//     if(!data) return;
-
-//     if(data.team){
-//         leaveTeam(event.player);
-//     }
-// })
-
 /**
  * Gets player data
  * @param {string} player - Player name
