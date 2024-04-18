@@ -26,7 +26,7 @@ ServerEvents.commandRegistry((event) => {
                         `§2--Arena stats--`,
                         `§5Arena Played: §f${data.arenaParticipation}`,
                         `§5Arena Wins: §a${data.singleWins+data.teamWins} §f(${winPercentageColor}${Math.round(winPercentage)}%§f)`,
-                        `§5Single Wins: §a${data.singleWins}`,
+                        `§5Solo Wins: §a${data.singleWins}`,
                         `§5Team Wins: §a${data.teamWins}`,
                     ];
                     for(const line of lines){
