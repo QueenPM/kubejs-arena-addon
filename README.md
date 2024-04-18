@@ -1,6 +1,6 @@
 # kubejs Arena Script
 
-This project is a script for the Minecraft Modpack [Kath.gg Arena](www.curseforge.com) using KubeJS Mod.
+This project is a script for the Minecraft Modpack [Kath.gg Arena](www.curseforge.com) using [KubeJS Mod](https://kubejs.com/).
 
 This script is used to create a custom arena for the modpack. Features include:
 - Create and Manage Arenas
@@ -15,6 +15,10 @@ This script is used to create a custom arena for the modpack. Features include:
 ### Installation
 
 All you need to do is copy this folder's contents into your `kubejs` folder in your Minecraft instance.
+
+### ProbeJS
+
+The git repo does not come included with probejs files. I recommend getting the [ProbeJS Mod](https://www.curseforge.com/minecraft/mc-mods/probejs) mod and the [ProbeJS Extension](https://marketplace.visualstudio.com/items?itemName=Prunoideae.probejs) for a better development experience.
 
 ## Usage
 ### Arena Commands (Needs OP)
@@ -38,7 +42,6 @@ All you need to do is copy this folder's contents into your `kubejs` folder in y
 - `/kit save <kit_name>` - Saves your current inventory as a kit. If a kit already exists, it will be replaced.
 - `/kit delete <kit_name>` - Deletes a kit.
 - `/unkit` - Clears the player's inventory and removes the kit.
-
 
 ## License
 
