@@ -155,6 +155,7 @@ function stopActiveArena(){
 
             block.set(team.spawnBlock);
         }
+        showArenaScoreboard();
         return true;
     }
 }
@@ -765,10 +766,8 @@ ServerEvents.tick((event)=>{
 })
 
 function activeArenaTickEvent(arena, server){
-    showArenaScoreboard(arena, server);
+    showArenaScoreboard(arena);
     if(!arena) return;
-
-
     let timeLeft = ARENA_TIMEOUT - (Date.now() - arena.active);
     let percentage = timeLeft / ARENA_TIMEOUT * 100;
     if(timeLeft <= 0){
