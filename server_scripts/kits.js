@@ -105,7 +105,7 @@ function saveKit(name, player){
  * @returns {boolean} True/False on the success of the operation.
  */
 function giveKit(name, player){
-    const pData = getPlayerData(player);
+    const pData = getPlayerData(player.username);
     if(!pData) return false;
     const sData = getPSData();
     if(!sData) return false;
@@ -197,7 +197,7 @@ ServerEvents.commandRegistry((event) => {
 
     event.register(Commands.literal('unkit')
         .executes(c => {
-            const pData = getPlayerData(c.source.player);
+            const pData = getPlayerData(c.source.player.username);
             if(!pData) return;
             c.source.player.inventory.clear()
             delete pData.kit

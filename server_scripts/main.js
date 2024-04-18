@@ -3,6 +3,7 @@
  * @property {Array<ArenaData>} arenas - The arenas in the server
  * @property {Array} teamDesignationBlocks - The teams in the server
  * @property {Array<KitData>} kits - The kits in the server
+ * @property {Object.<string, PlayerKathData>} playerData - The player data in the server. Key is UUID
  */
 
 /**
@@ -17,6 +18,7 @@
 
 /**
  * @typedef {Object} PlayerKathData
+ * @property {string} name - The name of the player
  * @property {string|null} kit - Name of the kit the player has selected 
  * @property {string|null} team - Name of the team the player is in
  * @property {boolean} teamCommandAssigned
@@ -40,6 +42,30 @@ function print(text){
 }
 
 /**
+ * Helper function to convert a name to UUID
+ * @param {string} name 
+ * @returns 
+ */
+function playerNameToUUID(name){
+    let psData = getPSData();
+    if(!psData) return null;
+    for(const uuid in psData.playerData){
+        if(psData.playerData[uuid].name.toLowerCase() == name.toLowerCase()){
+            return uuid;
+        }
+    }
+
+    let server = Utils.getServer();
+    if(!server) return null;
+    let player = server.getPlayer(name);
+    if(player){
+        return player.uuid;
+    }
+
+    return null;
+}
+
+/**
  * Gets the persistent data of the server
  * @returns {ServerKathData}
  */
@@ -51,7 +77,7 @@ function getPSData(){
     if(!data.arenas) data.arenas = [];
     if(!data.teamDesignationBlocks) data.teamDesignationBlocks = [];
     if(!data.kits) data.kits = [];
-
+    if(!data.playerData) data.playerData = {};
 
     server.persistentData.put("kath", data);
     return data;
@@ -79,16 +105,26 @@ ServerEvents.loaded((event)=>{
 
 /**
  * Gets player data
- * @param {Internal.ServerPlayer} player 
+ * @param {string} player - Player name
  * @returns {null|PlayerKathData}
  */
 function getPlayerData(player){
+    let psData = getPSData();
+    if(!psData) return null;
+    let uuid = playerNameToUUID(player);
+    if(!uuid) return null;;
+
     /**
      * @type {PlayerKathData}
      */
-    let data = player.persistentData.get("kath");
+    let data = psData.playerData[uuid];
     if(!data){
-        data = {}
+        if(!data){
+            data = {};
+        }
+    }
+    if(!data.name){
+        data.name = player;
     }
     if(!data.teamCommandAssigned) data.teamCommandAssigned = false;
     if(!data.kills) data.kills = 0;
@@ -104,9 +140,6 @@ function getPlayerData(player){
     if(!data.singleWins) data.singleWins = 0;
     if(!data.teamWins) data.teamWins = 0;
 
-    if(data != player.persistentData.get("kath")){
-        player.persistentData.put("kath", data);
-    }
     if(typeof data.lastSelectedSlot == "undefined") data.lastSelectedSlot = 0;
     return data;
 }
@@ -117,6 +150,13 @@ function getPlayerData(player){
  * @param {PlayerKathData} data 
  */
 function savePlayerData(player, data){
+    let server = Utils.getServer();
+    if(server){
+        let serverData = getPSData();
+        if(!serverData) return;
+        serverData.playerData[player.uuid] = data;
+        server.persistentData.put("kath", serverData);
+    }
     player.persistentData.put("kath", data);
 }
 

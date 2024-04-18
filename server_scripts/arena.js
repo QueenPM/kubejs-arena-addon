@@ -7,7 +7,7 @@ function getAllPlayerPoints(){
     let players = server.getPlayers();
     let points = [];
     for(const player of players){
-        let pData = getPlayerData(player);
+        let pData = getPlayerData(player.username);
         if(!pData) continue;
         if(!pData.team) continue;
 
@@ -57,7 +57,7 @@ function stopActiveArena(){
         let teamPoints = {};
         for(const point of points){
             server.tell(`§c* ${point.name} achieved §6${point.points} §cpoints!`);
-            let team = getPlayerData(point.player).team;
+            let team = getPlayerData(point.player.username).team;
             if(!team) continue;
             if(!teamPoints[team]) teamPoints[team] = 0;
             teamPoints[team] += point.points;
@@ -71,7 +71,7 @@ function stopActiveArena(){
             participatingPlayer.tell(`§a---------------------------------------`);
             participatingPlayer.tell(`§aYou achieved §6${theirPoint.points} §apoints!`);
 
-            let data = getPlayerData(participatingPlayer);
+            let data = getPlayerData(participatingPlayer.username);
             if(data){
                 data.points = 0;
                 data.currentDeaths = 0;
@@ -148,7 +148,7 @@ function startArena(arenaName, player){
     // Get all online players and iterate over their persistant data
     let players = server.getPlayers();
     for(const player of players){
-        let pData = getPlayerData(player);
+        let pData = getPlayerData(player.username);
         if(!pData) continue;
         if(pData.team){
             server.runCommandSilent(`team join ${pData.team} ${player.username}`);
@@ -206,7 +206,6 @@ function startArena(arenaName, player){
     // Replace all spawnpoints to their original block
     for(const spawn of arena.spawns){
         let block = server.overworld().getBlock(spawn.x, spawn.y, spawn.z);
-        print(spawn.original_block)
         block.set(spawn.original_block);
     }
     return true;
@@ -237,7 +236,7 @@ EntityEvents.death((event)=>{
     let activeArena = getActiveArena();
     if(!activeArena) return;
     
-    let deadData = getPlayerData(deadPlayer)
+    let deadData = getPlayerData(deadPlayer.username)
     if(!deadData || !deadData.team) return;
     
     let deadTeamData = getTeam(deadData.team);
@@ -246,7 +245,7 @@ EntityEvents.death((event)=>{
         event.server.runCommandSilent(`execute at @a run playsound minecraft:entity.arrow.hit_player master @a ${deadPlayer.x} ${deadPlayer.y} ${deadPlayer.z} 1 1 1`);
     }
 
-    let killerTeamData = getTeam(getPlayerData(killerPlayer).team);
+    let killerTeamData = getTeam(getPlayerData(killerPlayer.username).team);
     
     deadData.deaths++;
     deadData.currentDeaths++;
@@ -257,7 +256,7 @@ EntityEvents.death((event)=>{
         print(`${deadTeamData.colorCode}${deadPlayer.username} §8is on a §c${deadData.deathStreak} §8death streak!`)
     }
     
-    let killerData = getPlayerData(killerPlayer);
+    let killerData = getPlayerData(killerPlayer.username);
     if(deadData.killStreak > 2){
         print(`§a${activeArena.name} §2> §f${killerTeamData?.colorCode}${killerPlayer.username} §fended ${deadTeamData.colorCode}${deadPlayer.username}§f's kill streak of §a${deadData.killStreak}§f!`)
         event.server.runCommandSilent(`playsound minecraft.entity.lightning_bolt.thunder master @a`)
@@ -289,7 +288,7 @@ EntityEvents.death((event)=>{
 
 PlayerEvents.respawned((event)=>{
     try{
-        let pData = getPlayerData(event.player);
+        let pData = getPlayerData(event.player.username);
         if(!pData || !pData.team) return;
     
         if(pData.kit){
@@ -761,7 +760,7 @@ function showArenaScoreboard(arena){
         // Scoreboard
         let points = getAllPlayerPoints();
         for(let point of points){
-            let team = getTeam(getPlayerData(point.player).team);
+            let team = getTeam(getPlayerData(point.player.username).team);
             let color = "white"
             if(team){
                 color = team.textColor;   

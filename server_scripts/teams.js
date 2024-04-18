@@ -49,7 +49,7 @@ function notifyTeamPlayers(team, message){
     if(!server) return;
     let players = server.getPlayers();
     let teamPlayers = players.filter(p => {
-        let pData = getPlayerData(p);
+        let pData = getPlayerData(p.username);
         if(!pData) return false;
         return pData.team == team.name;
     });
@@ -67,7 +67,7 @@ function notifyTeamPlayers(team, message){
  * @returns 
  */
 function joinTeam(player, team, teamCommandAssigned){
-    let pData = getPlayerData(player);
+    let pData = getPlayerData(player.username);
     if(!pData) return false;
     let foundTeam = TEAMS.find(t => t.name.toLowerCase() == team.toLowerCase());
     if(!foundTeam) return false;
@@ -105,7 +105,7 @@ function joinTeam(player, team, teamCommandAssigned){
  * @param {boolean} teamCommandAssigned
  */
 function leaveTeam(player, teamCommandAssigned){
-    let pData = getPlayerData(player);
+    let pData = getPlayerData(player.username);
     if(!pData) return;
     let server = Utils.getServer();
     if(!server) return;
@@ -158,7 +158,7 @@ ServerEvents.commandRegistry((event) => {
         ))
         .then(Commands.literal('leave')
             .executes(c => {
-                let pData = getPlayerData(c.source.player);
+                let pData = getPlayerData(c.source.player.username);
                 if(!pData) return;
                 let server = Utils.getServer();
                 if(!server) return;
@@ -204,7 +204,7 @@ PlayerEvents.tick((event) => {
         });
     
         
-        let playerData = getPlayerData(player);
+        let playerData = getPlayerData(player.username);
         if(!playerData) return;
         if(foundBlock && foundBlock.y < playerY && playerY < foundBlock.y + 5){
             let team = foundBlock.team;
