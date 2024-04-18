@@ -14,6 +14,7 @@
  * @property {Array<ArenaSpawnLocation>} spawns - The spawn points in the arena
  * @property {number} active - Whether the arena is active or not. 0 = inactive, >0 time it was activated
  * @property {Array<string>} players - The UUID of players active in the arena
+ * @property {string} gamemode - The gamemode of the arena. Default: TDM
  */
 
 /**
@@ -185,6 +186,7 @@ function getArenaData(arenaName){
     if(!arena.spawns) arena.spawns = [];
     if(!arena.players) arena.players = [];
     if(!arena.active) arena.active = 0;
+    if(!arena.gamemode) arena.gamemode = "tdm";
 
     return arena;
 }
