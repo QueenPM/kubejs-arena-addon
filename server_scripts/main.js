@@ -11,8 +11,17 @@
  * @property {string} name - The name of the arena
  * @property {?Object} corner1 - The first corner of the arena
  * @property {?Object} corner2 - The second corner of the arena
- * @property {Array} spawns - The spawn points in the arena
+ * @property {Array<ArenaSpawnLocation>} spawns - The spawn points in the arena
  * @property {number} active - Whether the arena is active or not. 0 = inactive, >0 time it was activated
+ * @property {Array<string>} players - The UUID of players active in the arena
+ */
+
+/**
+ * @typedef {Object} ArenaSpawnLocation
+ * @property {number} x - The x coordinate of the spawn
+ * @property {number} y - The y coordinate of the spawn
+ * @property {number} z - The z coordinate of the spawn
+ * @property {number} original_block - The block that was originally there
  */
 
 
@@ -21,6 +30,7 @@
  * @property {string} name - The name of the player
  * @property {string|null} kit - Name of the kit the player has selected 
  * @property {string|null} team - Name of the team the player is in
+ * @property {string|null} arena - Name of the arena the player is in
  * @property {number} kills - Number of kills the player has
  * @property {number} currentKills - Number of kills the player has in the currently participating arena
  * @property {number} killStreak - Player's kill streak
@@ -164,13 +174,19 @@ function savePlayerData(player, data){
  * @returns {ArenaData|undefined}
  */
 function getArenaData(arenaName){
-    let data = getPSData();
-    if(!data) return undefined;
-    if(data.arenas){
-        return data.arenas.find(a => a.name == arenaName);
-    }else{
-        return undefined;
+    let psData = getPSData();
+    if(!psData) return undefined;
+    let arena = psData.arenas.find(a => a.name == arenaName);
+    if(!arena){
+        arena = {};
     }
+
+    if(!arena.name) arena.name = arenaName;
+    if(!arena.spawns) arena.spawns = [];
+    if(!arena.players) arena.players = [];
+    if(!arena.active) arena.active = 0;
+
+    return arena;
 }
 
 /**

@@ -2,6 +2,10 @@
 // global var for the bossbar color. Used as a control to not spam the bossbar color change. Probably a better way to do this
 let currentColor = "§a";
 
+/**
+ * Gets all points of all players in a specific arena
+ * @returns 
+ */
 function getAllPlayerPoints(){
     let server = Utils.getServer();
     let players = server.getPlayers();
@@ -21,7 +25,35 @@ function getAllPlayerPoints(){
     points.sort((a,b) => b.points - a.points);
 
     return points;
+}
 
+/**
+ * Gets and returns all active players currently participating in a specific Arena
+ * @param {string} arenaName
+ * @returns {Array<Internal.ServerPlayer>}
+ */
+function getPlayersInArena(arenaName){
+    let arena = getArenaData(arenaName);
+    if(!arena) return [];
+
+}
+
+/**
+ * Gets all available players who are part of a team and not currently participating in an arena
+ * @returns {Array<Internal.ServerPlayer>}
+ */
+function getAvailablePlayers(){
+    let server = Utils.getServer();
+    let players = server.getPlayers();
+    let availablePlayers = [];
+    for(const player of players){
+        let pData = getPlayerData(player.username);
+        if(!pData) continue;
+        if(pData.team && !pData.arena){
+            availablePlayers.push(player);
+        }
+    }
+    return availablePlayers;
 }
 
 /**
@@ -78,7 +110,7 @@ function stopActiveArena(){
                 data.currentKills = 0;
                 data.deathStreak = 0;
                 data.killStreak = 0;
-
+                delete data.arena
                 data.arenaParticipation++;
 
                 let team = participatingPlayer.team;
@@ -96,6 +128,7 @@ function stopActiveArena(){
             leaveTeam(participatingPlayer);
         }
 
+        activeArena.players = [];
         activeArena.active = 0;
         saveArenaData(activeArena);
 
@@ -145,19 +178,23 @@ function startArena(arenaName, player){
 
     currentColor = "§a";
 
-    // Get all online players and iterate over their persistant data
-    let players = server.getPlayers();
+    // Get all online players who are available to play
+    let players = getAvailablePlayers();
     for(const player of players){
         let pData = getPlayerData(player.username);
         if(!pData) continue;
         if(pData.team){
             server.runCommandSilent(`team join ${pData.team} ${player.username}`);
+        }else{
+            continue;
         }
         pData.currentDeaths = 0;
         pData.deathStreak = 0;
         pData.killStreak = 0;
         pData.currentKills = 0;
         pData.points = 0;
+        pData.arena = arenaName;
+        arena.players.push(player.uuid);
         savePlayerData(player, pData);
     }
 
