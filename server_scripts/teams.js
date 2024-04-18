@@ -8,6 +8,7 @@
  * @property {string} spawnBlock - Minecraft Block ID for the block to be used for Team Spawns
  * @property {string} teamPlatform - Minecraft Block ID for the block to be used for Team Designation
  * @property {Array<string>} arenasActive - The names of the arenas that are currently active for this team
+ * @property {string} teamMarkerItem - The item that will be used to mark the team
  */
 
 /**
@@ -24,7 +25,8 @@ const TEAMS = [
         block: "minecraft:blue_wool",
         spawnBlock: "minecraft:blue_concrete",
         teamPlatform: "securitycraft:reinforced_blue_stained_glass",
-        arenasActive: []
+        arenasActive: [],
+        teamMarkerItem: "minecraft:lapis_lazuli"
     },
     {
         name: "Red",
@@ -34,7 +36,8 @@ const TEAMS = [
         block: "minecraft:red_wool",
         spawnBlock: "minecraft:red_concrete",
         teamPlatform: "securitycraft:reinforced_red_stained_glass",
-        arenasActive: []
+        arenasActive: [],
+        teamMarkerItem: "minecraft:red_dye"
     }
 ]
 // TODO this probably doesnt get used in places where it needs to be.

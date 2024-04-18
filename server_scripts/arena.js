@@ -75,23 +75,28 @@ function stopActiveArena(){
     let activeArena = getActiveArenas()[0];
     let server = Utils.getServer();
     if(activeArena && server){
-        // Kill every player who has a team
-        server.runCommandSilent(`kill @a[team=Red]`);
-        server.runCommandSilent(`kill @a[team=Blue]`);
+        let gamemode = getArenaGamemode(activeArena);
+        if(!gamemode) return;
+        let requiredTeams = gamemode.teams;
+
+        for(const team of requiredTeams){
+            // Kill every player who participated
+            server.runCommandSilent(`kill @a[team=${team}]`);
+
+            // Summon a firework at everyone
+            server.schedule(50, ()=>{
+                server.runCommandSilent(`execute as @a[team=${team}] run summon firework_rocket ~ ~ ~ {LifeTime:0,FireworksItem:{id:firework_rocket,Count:1,tag:{Fireworks:{Explosions:[{Colors:[I;16711680,255]}]}}}}`);
+            })
+
+            server.runCommandSilent(`team join Spawn @a[team=${team}]`);
+        }
         
-        // Summon a firework at everyone
-        server.schedule(50, ()=>{
-            server.runCommandSilent(`execute as @a run summon firework_rocket ~ ~ ~ {LifeTime:0,FireworksItem:{id:firework_rocket,Count:1,tag:{Fireworks:{Explosions:[{Colors:[I;16711680,255]}]}}}}`);
-        })
 
         server.runCommandSilent(`title @a title "§aEvent has concluded!"`);
         server.runCommandSilent(`title @a subtitle "Goodjob everyone!"`);
 
         // Hide the bossbar
         server.runCommandSilent(`bossbar set minecraft:0 visible false`);
-
-        // Give everyone the "Spawn" team
-        server.runCommandSilent(`team join Spawn @a`);
 
         let points = getAllPlayerPoints();
         let players = getPlayersInArena(activeArena.name);
@@ -175,6 +180,11 @@ function startArena(arenaName, player){
         player.tell("Arena not found!");
         return;
     }
+    let gamemode = getArenaGamemode(arena);
+    if(!gamemode){
+        player.tell("Gamemode not found!");
+        return;
+    }
 
     if(arena.active > 0){
         player.tell("Arena is already active!");
@@ -182,28 +192,40 @@ function startArena(arenaName, player){
     }
 
     let availablePlayers = getAvailablePlayers();
-    if(availablePlayers.length < 1){
-        player.tell("Not enough players to start the arena!");
-        return;
-    }
+    let requiredTeams = gamemode.teams;
+    for(const team of requiredTeams){
+        let teamPlayers = availablePlayers.filter(p => p.team == team.team);
+        if(teamPlayers.length < team.minPlayers){
+            player.tell(`Not enough players in Team ${team.team}! You need at least ${team.minPlayers} players! (Currently ${teamPlayers.length})`);
+            return;
+        }
 
-    
-    // Check if the arena has spawns for at least two teams
-    let redSpawns = arena.spawns.filter(s => s.team == "Red");
-    let blueSpawns = arena.spawns.filter(s => s.team == "Blue");
-    if(redSpawns.length == 0 || blueSpawns.length == 0){
-        player.tell("Arena needs at least one spawn for each team!");
-        return;
-    }    
+        let spawnLocations = arena.spawns.filter(s => s.team == team.team);
+        if(spawnLocations.length == 0){
+            player.tell(`Not enough spawn locations for Team ${team.team}!`);
+            return;
+        }
+    }
     
     currentColor = "§a";
     
     // Get all online players who are available to play
     let players = getAvailablePlayers();
+    let playersAssignedToTeams = {};
     for(const player of players){
         let pData = getPlayerData(player.username);
         if(!pData) continue;
-        if(pData.team){
+        let team = pData.team;
+        let gamemodeTeam = gamemode.teams.find(t => t.team == team);
+        if(!gamemodeTeam) continue;
+        if(team){
+            if(gamemodeTeam.maxPlayers > 0){
+                if (!playersAssignedToTeams[team]) playersAssignedToTeams[team] = 0;
+                if(playersAssignedToTeams[team] >= gamemodeTeam.maxPlayers){
+                    player.tell(`You won't participate in the arena because Team ${team} was full!`);
+                    continue;
+                }
+            }
             server.runCommandSilent(`team join ${pData.team} ${player.username}`);
         }else{
             continue;
@@ -215,6 +237,7 @@ function startArena(arenaName, player){
         pData.points = 0;
         pData.arena = arenaName;
         arena.players.push(player.getStringUuid());
+        playersAssignedToTeams[team]++;
         savePlayerData(player, pData);
     }
 
@@ -228,24 +251,22 @@ function startArena(arenaName, player){
     arena.active = Date.now();
     saveArenaData(arena);
 
-    // Teleport players to their spawn
-    server.runCommandSilent(`kill @a[team=Red]`);
-    server.runCommandSilent(`kill @a[team=Blue]`);
+    for(const team of requiredTeams){
+        // Teleport players to their spawn
+        server.runCommandSilent(`kill @a[team=${team}]`);
 
-    // Hide display names
-    server.runCommandSilent(`team modify Red nametagVisibility never`);
-    server.runCommandSilent(`team modify Blue nametagVisibility never`);
+        // Hide display names
+        server.runCommandSilent(`team modify ${team} nametagVisibility never`);
+        
+        // Turn off kill feed
+        server.runCommandSilent(`team modify ${team} deathMessageVisibility never`);
 
-    // Turn off kill feed
-    server.runCommandSilent(`team modify Red deathMessageVisibility never`);
-    server.runCommandSilent(`team modify Blue deathMessageVisibility never`);
-
+        // Message the teams
+        server.runCommandSilent(`title @a[team=${team}] actionbar "§cYou're Team ${team}!"`);
+    }
     // Send a title
     server.runCommandSilent(`title @a title "§aArena ${arenaName} started!"`);
     // server.runCommandSilent(`title @a subtitle "Kill everyone or be killed!"`);
-
-    server.runCommandSilent(`title @a[team=Red] actionbar "§cYou're Team Red!"`);
-    server.runCommandSilent(`title @a[team=Blue] actionbar "§9You're Team Blue!"`);
 
     // Start a bossbar
     server.runCommandSilent(`bossbar add 0 "arena"`);
@@ -256,9 +277,6 @@ function startArena(arenaName, player){
     server.runCommandSilent(`bossbar set minecraft:0 max 100`);
     server.runCommandSilent(`bossbar set minecraft:0 style notched_6`);
     server.runCommandSilent(`bossbar set minecraft:0 players @a`);
-
-    // Play some dumbass thing
-    // server.runCommandSilent(`execute as @a run playsound alexsmobs:april_fools_music_box music @s ~ ~ ~ 1 1 1`)
 
     // Replace all spawnpoints to their original block
     for(const spawn of arena.spawns){
@@ -422,34 +440,32 @@ function getAllArenas(){
  * @param {*} arenaName 
  */
 function giveArenaTools(player, arenaName){ // TODO we can clean this up to be nicer
-    player.give({
-        item: "minecraft:red_dye",
-        nbt:{
-            display:{
-                Name: `{"text":"Arena Tool Spawn - ${arenaName}"}`,
-                Lore: [
-                    `{"text":"Red Team Spawn"}`
-                ]
-            },
-            arena_tool:1,
-            spawn:"Red",
-            arena_name: arenaName
-        }
-    })
-    player.give({
-        item: "minecraft:lapis_lazuli",
-        nbt:{
-            display:{
-                Name: `{"text":"Arena Tool Spawn - ${arenaName}"}`,
-                Lore: [
-                    `{"text":"Blue Team Spawn"}`
-                ]
-            },
-            arena_tool:1,
-            spawn:"Blue",
-            arena_name: arenaName
-        }
-    })
+    let tools = [];
+    let gamemode = getArenaGamemode(getArenaData(arenaName));
+    if(!gamemode) return;
+    for(const team of gamemode.teams){
+        let team = getTeam(team.team);
+        if(!team) continue;
+        tools.push({
+            item: team.teamMarkerItem,
+            nbt:{
+                display:{
+                    Name: `{"text":"Spawn - ${arenaName}"}`,
+                    Lore: [
+                        `{"text":"Set ${team}'s Spawn Location"}`
+                    ]
+                },
+                arena_tool:1,
+                spawn:team.name,
+                arena_name: arenaName
+            }
+        })
+    }
+
+    for(const tool of tools){
+        player.give(tool);
+    }
+
     player.give({
         item: "supplementaries:soap",
         nbt:{

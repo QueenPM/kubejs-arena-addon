@@ -6,32 +6,21 @@
  * @param {Internal.ServerPlayer} player 
  */
 function giveSpawnTools(player){
-    player.give({
-        item: "minecraft:red_dye",
-        nbt:{
-            display:{
-                Name: `{"text":"Spawn Tool - Team Red"}`,
-                Lore: [
-                    `{"text":"Red Team Designation"}`
-                ]
-            },
-            spawn_tool:1,
-            team:"Red",
-        }
-    })
-    player.give({
-        item: "minecraft:lapis_lazuli",
-        nbt:{
-            display:{
-                Name: `{"text":"Spawn Tool - Team Blue"}`,
-                Lore: [
-                    `{"text":"Blue Team Designation"}`
-                ]
-            },
-            spawn_tool:1,
-            team:"Blue",
-        }
-    })
+    for(const team of TEAMS){
+        player.give({
+            item: team.teamMarkerItem,
+            nbt:{
+                display:{
+                    Name: `{"text":"Spawn Tool - Team ${team.name}"}`,
+                    Lore: [
+                        `{"text":"${team.name} Team Designation"}`
+                    ]
+                },
+                spawn_tool:1,
+                team:team.name,
+            }
+        })
+    }
     player.give({
         item: "supplementaries:soap",
         nbt:{
