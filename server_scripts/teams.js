@@ -6,7 +6,8 @@
  * @property {number} decimalColor - The decimal color code. Used for fireworks & other things
  * @property {string} block - Unused. This was used for right clicking to get a team. Might be re-used in the future. Perhaps replace the Team Designation blocks with this.
  * @property {string} spawnBlock - Minecraft Block ID for the block to be used for Team Spawns
- * @property {string} teamDesignationBlock - Minecraft Block ID for the block to be used for Team Designation
+ * @property {string} teamPlatform - Minecraft Block ID for the block to be used for Team Designation
+ * @property {Array<string>} arenasActive - The names of the arenas that are currently active for this team
  */
 
 /**
@@ -22,7 +23,8 @@ const TEAMS = [
         decimalColor: 255,
         block: "minecraft:blue_wool",
         spawnBlock: "minecraft:blue_concrete",
-        teamDesignationBlock: "securitycraft:reinforced_blue_stained_glass"
+        teamPlatform: "securitycraft:reinforced_blue_stained_glass",
+        arenasActive: []
     },
     {
         name: "Red",
@@ -31,7 +33,8 @@ const TEAMS = [
         decimalColor: 16711680,
         block: "minecraft:red_wool",
         spawnBlock: "minecraft:red_concrete",
-        teamDesignationBlock: "securitycraft:reinforced_red_stained_glass"
+        teamPlatform: "securitycraft:reinforced_red_stained_glass",
+        arenasActive: []
     }
 ]
 // TODO this probably doesnt get used in places where it needs to be.
@@ -63,10 +66,9 @@ function notifyTeamPlayers(team, message){
  * Join a team
  * @param {Internal.ServerPlayer} player 
  * @param {string} team 
- * @param {boolean} teamCommandAssigned
  * @returns 
  */
-function joinTeam(player, team, teamCommandAssigned){
+function joinTeam(player, team){
     let pData = getPlayerData(player.username);
     if(!pData) return false;
     let foundTeam = TEAMS.find(t => t.name.toLowerCase() == team.toLowerCase());
@@ -88,8 +90,6 @@ function joinTeam(player, team, teamCommandAssigned){
         server.runCommandSilent(`team modify ${teamName} color ${foundTeam.textColor}`);
         
         pData.team = foundTeam.name;
-        if(!teamCommandAssigned) teamCommandAssigned = false;
-        pData.teamCommandAssigned = teamCommandAssigned;
         savePlayerData(player, pData);
 
         player.displayClientMessage(`${foundTeam.colorCode}You'll be participating as ${team}!`, true)
@@ -102,9 +102,8 @@ function joinTeam(player, team, teamCommandAssigned){
 /**
  * Leave a team
  * @param {Internal.ServerPlayer} player 
- * @param {boolean} teamCommandAssigned
  */
-function leaveTeam(player, teamCommandAssigned){
+function leaveTeam(player){
     let pData = getPlayerData(player.username);
     if(!pData) return;
     let server = Utils.getServer();
@@ -112,9 +111,7 @@ function leaveTeam(player, teamCommandAssigned){
     let team = pData.team;
     if(!team) return;
     
-    if(!teamCommandAssigned) teamCommandAssigned = false;
     delete pData.team;
-    pData.teamCommandAssigned = teamCommandAssigned;
     savePlayerData(player, pData);
     server.runCommandSilent(`team join Spawn ${player.username}`);
     
@@ -143,7 +140,7 @@ ServerEvents.commandRegistry((event) => {
                 })
                 .executes(c => {
                     let name = Arguments.STRING.getResult(c, 'name');
-                    let result = joinTeam(c.source.player, name, true);
+                    let result = joinTeam(c.source.player, name);
                     if(typeof result == "object"){
                         return 1;
                     }else if(result === 1){
@@ -167,7 +164,7 @@ ServerEvents.commandRegistry((event) => {
                     c.source.player.tell('You\'re not on a team!');
                     return 1;
                 }
-                leaveTeam(c.source.player, true);
+                leaveTeam(c.source.player);
                 return 1
             }
         ))

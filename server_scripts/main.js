@@ -21,7 +21,6 @@
  * @property {string} name - The name of the player
  * @property {string|null} kit - Name of the kit the player has selected 
  * @property {string|null} team - Name of the team the player is in
- * @property {boolean} teamCommandAssigned
  * @property {number} kills - Number of kills the player has
  * @property {number} currentKills - Number of kills the player has in the currently participating arena
  * @property {number} killStreak - Player's kill streak
@@ -126,7 +125,6 @@ function getPlayerData(player){
     if(!data.name){
         data.name = player;
     }
-    if(!data.teamCommandAssigned) data.teamCommandAssigned = false;
     if(!data.kills) data.kills = 0;
     if(!data.currentKills) data.currentKills = 0;
     if(!data.killStreak) data.killStreak = 0;
