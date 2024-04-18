@@ -14,7 +14,7 @@ This script is used to create a custom arena for the modpack. Features include:
 
 ### Installation
 
-All you need to do is copy this folder's contents into your `kubejs` folder in your Minecraft instance.
+Copy this folder's contents into your `kubejs` folder in your Minecraft instance.
 
 ### ProbeJS
 
