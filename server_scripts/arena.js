@@ -77,20 +77,6 @@ function stopActiveArena(){
     if(activeArena && server){
         let gamemode = getArenaGamemode(activeArena);
         if(!gamemode) return;
-        let requiredTeams = gamemode.teams;
-
-        for(const team of requiredTeams){
-            // Kill every player who participated
-            server.runCommandSilent(`kill @a[team=${team}]`);
-
-            // Summon a firework at everyone
-            server.schedule(50, ()=>{
-                server.runCommandSilent(`execute as @a[team=${team}] run summon firework_rocket ~ ~ ~ {LifeTime:0,FireworksItem:{id:firework_rocket,Count:1,tag:{Fireworks:{Explosions:[{Colors:[I;16711680,255]}]}}}}`);
-            })
-
-            server.runCommandSilent(`team join Spawn @a[team=${team}]`);
-        }
-        
 
         server.runCommandSilent(`title @a title "§aEvent has concluded!"`);
         server.runCommandSilent(`title @a subtitle "Goodjob everyone!"`);
@@ -128,9 +114,8 @@ function stopActiveArena(){
                     data.currentKills = 0;
                     data.deathStreak = 0;
                     data.killStreak = 0;
-                    delete data.arena
                     data.arenaParticipation++;
-    
+                    
                     let team = participatingPlayer.team;
                     if(team == winningTeam){
                         let teamSize = players.filter(p => p.team == team).length;
@@ -142,12 +127,15 @@ function stopActiveArena(){
                     }
                     savePlayerData(participatingPlayer, data);
                 }
-    
+                
                 leaveTeam(participatingPlayer);
+                server.schedule(50, ()=>{
+                    server.runCommandSilent(`execute as ${participatingPlayer.username} run summon firework_rocket ~ ~ ~ {LifeTime:0,FireworksItem:{id:firework_rocket,Count:1,tag:{Fireworks:{Explosions:[{Colors:[I;16711680,255]}]}}}}`);
+                })
             }
         }
 
-
+        activeArena.teams = [];
         activeArena.players = [];
         activeArena.active = 0;
         saveArenaData(activeArena);
@@ -194,9 +182,15 @@ function startArena(arenaName, player){
     let availablePlayers = getAvailablePlayers();
     let requiredTeams = gamemode.teams;
     for(const team of requiredTeams){
-        let teamPlayers = availablePlayers.filter(p => p.team == team.team);
+        let teamPlayers = availablePlayers.filter(p => {
+            let pData = getPlayerData(p.username);
+            if(!pData) return false;
+            return pData.team == team.team;
+        });
+
+        let teamData = getTeam(team.team);
         if(teamPlayers.length < team.minPlayers){
-            player.tell(`Not enough players in Team ${team.team}! You need at least ${team.minPlayers} players! (Currently ${teamPlayers.length})`);
+            player.tell(`Not enough players in ${teamData.colorCode}Team ${team.team}§f! You need at least ${team.minPlayers} players! (Currently ${teamPlayers.length})`);
             return;
         }
 
@@ -205,6 +199,13 @@ function startArena(arenaName, player){
             player.tell(`Not enough spawn locations for Team ${team.team}!`);
             return;
         }
+
+        let teamName = initializeMinecraftTeam(teamData);
+
+        arena.teams.push({
+            team: team.team,
+            givenMinecraftName: teamName
+        });
     }
     
     currentColor = "§a";
@@ -252,17 +253,12 @@ function startArena(arenaName, player){
     saveArenaData(arena);
 
     for(const team of requiredTeams){
+        let minecraftTeam = arena.teams.find(t => t.team == team.team);
         // Teleport players to their spawn
-        server.runCommandSilent(`kill @a[team=${team}]`);
-
-        // Hide display names
-        server.runCommandSilent(`team modify ${team} nametagVisibility never`);
-        
-        // Turn off kill feed
-        server.runCommandSilent(`team modify ${team} deathMessageVisibility never`);
+        server.runCommandSilent(`kill @a[team=${minecraftTeam.givenMinecraftName}]`);
 
         // Message the teams
-        server.runCommandSilent(`title @a[team=${team}] actionbar "§cYou're Team ${team}!"`);
+        server.runCommandSilent(`title @a[team=${minecraftTeam.givenMinecraftName}] actionbar "§cYou're Team ${minecraftTeam.team}!"`);
     }
     // Send a title
     server.runCommandSilent(`title @a title "§aArena ${arenaName} started!"`);
@@ -349,7 +345,7 @@ EntityEvents.death((event)=>{
         let regenerationDuration = Math.ceil(missingHealth * 1.2);
         event.server.runCommandSilent(`effect clear ${killerPlayer.username} minecraft:regeneration`);
         event.server.runCommandSilent(`effect give ${killerPlayer.username} minecraft:regeneration ${regenerationDuration} 1 true`);
-        killerPlayer.playSound("minecraft:entity.experience_orb.pickup");
+        event.server.runCommandSilent(`playsound minecraft:entity.experience_orb.pickup master ${killerPlayer.username} ${deadPlayer.x} ${deadPlayer.y} ${deadPlayer.z}`);
         killerPlayer.displayClientMessage(`§aYou've killed ${deadPlayer.username}`, true);
         if(killerData.killStreak > 2){
             event.server.runCommandSilent(`title @a actionbar "${killerPlayer.username} is on a §a${killerData.killStreak} kill streak!"`);

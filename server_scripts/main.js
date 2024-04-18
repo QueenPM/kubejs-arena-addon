@@ -15,6 +15,13 @@
  * @property {number} active - Whether the arena is active or not. 0 = inactive, >0 time it was activated
  * @property {Array<string>} players - The UUID of players active in the arena
  * @property {string} gamemode - The gamemode of the arena. Default: TDM
+ * @property {Array<HostageTeam>} teams - The teams that are held by the Arena.
+ */
+
+/**
+ * @typedef {Object} HostageTeam
+ * @property {string} team - The name of the team
+ * @property {string} givenMinecraftName - The name of the team in Minecraft
  */
 
 /**
@@ -177,6 +184,7 @@ function getArenaData(arenaName){
     if(!arena.players) arena.players = [];
     if(!arena.active) arena.active = 0;
     if(!arena.gamemode) arena.gamemode = "tdm";
+    if(!arena.teams) arena.teams = [];
 
     return arena;
 }

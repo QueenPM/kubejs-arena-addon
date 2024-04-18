@@ -85,8 +85,6 @@ function joinTeam(player, team){
         
         // Create the minecraft team
         let teamName = foundTeam.name
-        server.runCommandSilent(`team add ${teamName}`);
-        server.runCommandSilent(`team modify ${teamName} color ${foundTeam.textColor}`);
         
         pData.team = foundTeam.name;
         savePlayerData(player, pData);
@@ -216,3 +214,41 @@ PlayerEvents.tick((event) => {
         console.log(e)
     }
 })
+
+/**
+ * Initializes a Team for the Minecraft Server with Team Data values. If the team is in use by another Arena, it will attach a number to the end of the team name.
+ * @param {TeamData} team 
+ */
+function initializeMinecraftTeam(team){
+    try{
+        let server = Utils.getServer();
+        let activeArenas = getActiveArenas();
+        let index = 0;
+        for(const arena of activeArenas){
+            let teamsHostaged = arena.teams;
+            for(const team of teamsHostaged){
+                if(team == team.name){
+                    index++;
+                }
+            }
+        }
+    
+        let teamName = index ? `${team.name}${index}` : team.name;
+        // Create the team
+        server.runCommandSilent(`team add ${teamName}`);
+    
+        // Color the team
+        server.runCommandSilent(`team modify ${teamName} color ${team.textColor}`);
+    
+        // Hide display names
+        server.runCommandSilent(`team modify ${teamName} nametagVisibility never`);
+    
+        // Turn off kill feed
+        server.runCommandSilent(`team modify ${teamName} deathMessageVisibility never`);
+    
+        return teamName;
+    }catch(e){
+        print(e);
+        return team.name
+    }
+}

@@ -207,24 +207,3 @@ ServerEvents.commandRegistry((event) => {
         })
     );
 });
-
-//EntityEvents.death((event)=>{
-//    const sourcePlayer = event.source.getPlayer()
-//   if(!sourcePlayer) return;
-//
-//    let pointAwarded = 0;
-//
-//    // If its a player kill, award 50
-//    if(event.entity.entityType == "player"){
-//        pointAwarded = 50;
-//    }else{
-//        pointAwarded = 10;
-//    }
-//
-//    try{
-//        event.entity.playSound("minecraft:entity.experience_orb.pickup")
-//        sourcePlayer.displayClientMessage(Component.yellow(`+$${pointAwarded}`),true);
-//    }catch(e){
-//        print(e)
-//    }
-//})
