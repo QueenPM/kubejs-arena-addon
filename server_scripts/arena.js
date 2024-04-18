@@ -693,12 +693,10 @@ function milisecondsToText(miliseconds){
     }
 }
 
-let ticks = 0;
 
 // Tick event for arena related stuff
 ServerEvents.tick((event)=>{
-    if(ticks++ % 20 !== 0) return;
-    if(ticks > 1000000) ticks = 0;
+    if(event.server.tickCount % 20 !== 0) return;
     let server = Utils.getServer();
     if(!server) return;
     try{
