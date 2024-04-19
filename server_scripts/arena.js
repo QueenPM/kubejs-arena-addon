@@ -536,7 +536,7 @@ function giveArenaTools(player, arena){ // TODO we can clean this up to be nicer
             },
             arena_tool:1,
             clear_spawn:1,
-            arena_name: arena
+            arena_name: arena.name
         }
     })
 }
