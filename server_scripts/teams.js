@@ -9,6 +9,7 @@
  * @property {string} teamPlatform - Minecraft Block ID for the block to be used for Team Designation
  * @property {Array<string>} arenasActive - The names of the arenas that are currently active for this team
  * @property {string} teamMarkerItem - The item that will be used to mark the team
+ * @property {boolean} friendlyFire - Whether or not the team has friendly fire
  */
 
 /**
@@ -26,7 +27,8 @@ const TEAMS = [
         spawnBlock: "minecraft:blue_concrete",
         teamPlatform: "securitycraft:reinforced_blue_stained_glass",
         arenasActive: [],
-        teamMarkerItem: "minecraft:lapis_lazuli"
+        teamMarkerItem: "minecraft:lapis_lazuli",
+        friendlyFire: false
     },
     {
         name: "Red",
@@ -37,7 +39,20 @@ const TEAMS = [
         spawnBlock: "minecraft:red_concrete",
         teamPlatform: "securitycraft:reinforced_red_stained_glass",
         arenasActive: [],
-        teamMarkerItem: "minecraft:red_dye"
+        teamMarkerItem: "minecraft:red_dye",
+        friendlyFire: false
+    },
+    {
+        name: "Gray",
+        colorCode: "§7",
+        textColor: "gray",
+        decimalColor: 8421504,
+        block: "minecraft:gray_wool",
+        spawnBlock: "minecraft:gray_concrete",
+        teamPlatform: "securitycraft:reinforced_gray_stained_glass",
+        arenasActive: [],
+        teamMarkerItem: "minecraft:light_gray_dye",
+        friendlyFire: true
     }
 ]
 // TODO this probably doesnt get used in places where it needs to be.
@@ -245,6 +260,12 @@ function initializeMinecraftTeam(team){
     
         // Turn off kill feed
         server.runCommandSilent(`team modify ${teamName} deathMessageVisibility never`);
+
+        if(team.friendlyFire){
+            server.runCommandSilent(`team modify ${teamName} friendlyFire true`);
+        }else{
+            server.runCommandSilent(`team modify ${teamName} friendlyFire false`);
+        }
     
         return teamName;
     }catch(e){

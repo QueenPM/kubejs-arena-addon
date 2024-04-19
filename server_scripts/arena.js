@@ -90,16 +90,24 @@ function stopActiveArena(){
 
         if(players.length > 0){
             server.tell(`§bHere are the results:`);
-            let teamPoints = {};
-            for(const point of points){
-                server.tell(`§c* ${point.name} achieved §6${point.points} §cpoints!`);
-                let team = getPlayerData(point.player.username).team;
-                if(!team) continue;
-                if(!teamPoints[team]) teamPoints[team] = 0;
-                teamPoints[team] += point.points;
+            let winningTeam = null;
+            let winningPlayer = null;
+            if(gamemode.teams > 1){
+                // It was Team Based
+                let teamPoints = {};
+                for(const point of points){
+                    server.tell(`§c* ${point.name} achieved §6${point.points} §cpoints!`);
+                    let team = getPlayerData(point.player.username).team;
+                    if(!team) continue;
+                    if(!teamPoints[team]) teamPoints[team] = 0;
+                    teamPoints[team] += point.points;
+                }
+        
+                winningTeam = teamPoints ? Object.keys(teamPoints).reduce((a, b) => teamPoints[a] > teamPoints[b] ? a : b) : null;
+            }else{
+                // It was Solo
+                winningPlayer = points[0];
             }
-    
-            let winningTeam = teamPoints ? Object.keys(teamPoints).reduce((a, b) => teamPoints[a] > teamPoints[b] ? a : b) : null;
     
             for(const participatingPlayer of players){
                 let theirPoint = points.find(p => p.player.username == participatingPlayer.username);
@@ -116,13 +124,21 @@ function stopActiveArena(){
                     data.killStreak = 0;
                     data.arenaParticipation++;
                     
-                    let team = participatingPlayer.team;
-                    if(team == winningTeam){
-                        let teamSize = players.filter(p => p.team == team).length;
-                        if(teamSize == 1){
+                    if(winningTeam){
+                        let team = participatingPlayer.team;
+                        if(team == winningTeam){
+                            let teamSize = players.filter(p => p.team == team).length;
+                            if(teamSize == 1){
+                                data.singleWins++;
+                            }else if(teamSize > 1){
+                                data.teamWins++;
+                            }
+                        }
+                    }
+
+                    if(winningPlayer){
+                        if(winningPlayer.name.toLowerCase() == participatingPlayer.username.toLowerCase()){
                             data.singleWins++;
-                        }else if(teamSize > 1){
-                            data.teamWins++;
                         }
                     }
                     savePlayerData(participatingPlayer, data);

@@ -37,6 +37,19 @@ const GAMEMODES = [
                 minPlayers: 1
             }
         ]
+    },
+    {
+        name: "ffa",
+        displayName: "Free For All",
+        description: "Kill everyone to win",
+        timeLimit: 1000 * 60 * 5,
+        teams: [
+            {
+                team: "Gray",
+                maxPlayers: 0,
+                minPlayers: 2
+            }
+        ]
     }
 ]
 
