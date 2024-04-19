@@ -189,6 +189,7 @@ PlayerEvents.tick((event) => {
     if(event.server.getTickCount() % 20 != 0) return;
     let player = event.player;
     let server = event.server;
+    if(!server) return;
     try{
         server.runCommandSilent(`effect give ${player.username} minecraft:saturation 80 0 true`)
         let psData;
@@ -201,19 +202,18 @@ PlayerEvents.tick((event) => {
         let playerData = getPlayerData(player.username);
         if(!playerData) return;
         if(playerData.arena) return; // Don't run if an arena is active
-        if(!server) return;
-    
+
+        
         let blocks = psData.teamDesignationBlocks;
-    
+        
         // Check if the player is inside one of the blocks
         let playerX = Math.floor(player.x);
         let playerZ = Math.floor(player.z);
         let playerY = Math.floor(player.y);
-    
+        
         let foundBlock = blocks.find(b => {
             return b.x == playerX && b.z == playerZ;
         });
-    
         
         if(foundBlock && foundBlock.y < playerY && playerY < foundBlock.y + 5){
             let team = foundBlock.team;
