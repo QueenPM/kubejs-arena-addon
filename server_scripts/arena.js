@@ -85,7 +85,7 @@ function stopActiveArena(){
         server.runCommandSilent(`bossbar set minecraft:0 visible false`);
 
         let points = getAllPlayerPoints();
-        let players = getPlayersInArena(activeArena.name);
+        let players = getPlayersInArena(activeArena.name.toLowerCase());
         server.tell(`§2Arena §5${activeArena.name} §2has concluded!`);
 
         if(players.length > 0){
@@ -399,7 +399,7 @@ PlayerEvents.respawned((event)=>{
         }
         
         let activeArena = getArenaData(pData.arena);
-        if(!activeArena) return;
+        if(!activeArena || activeArena.active == 0) return;
         // Check if the player should respawn in an arena
         let team = pData.team;
         if(!team) return;
