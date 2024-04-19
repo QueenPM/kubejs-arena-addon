@@ -171,20 +171,28 @@ function stopActiveArena(){
 
 /**
  * Starts an arena
- * @param {*} arenaName 
+ * @param {string} arenaName 
  * @param {Internal.ServerPlayer} player 
+ * @param {string} selectGamemode
  * @returns 
  */
-function startArena(arenaName, player){
+function startArena(arenaName, player, selectGamemode){
     let server = Utils.getServer();
     if(!server) return;
 
+    
     let arena = getArenaData(arenaName);
     if(!arena) {
         player.tell("Arena not found!");
         return;
     }
-    let gamemode = getArenaGamemode(arena);
+    let availableGamemodes = arena.gamemodes;
+    if(!availableGamemodes.some(g=>g.toLowerCase() == selectGamemode.toLowerCase())){
+        player.tell("Gamemode not available for this arena!");
+        return;
+    }
+
+    let gamemode = getArenaGamemode(gamemode);
     if(!gamemode){
         player.tell("Gamemode not found!");
         return;
@@ -266,6 +274,7 @@ function startArena(arenaName, player){
     server.runCommandSilent(`gamerule naturalRegeneration false`);
 
     arena.active = Date.now();
+    arena.gamemode = gamemode.name;
     saveArenaData(arena);
 
     for(const team of requiredTeams){
@@ -427,7 +436,7 @@ function createArena(name, gamemode, player){
         let gamemodeData = GAMEMODES.find(g=>g.name.toLowerCase() == gamemode.toLowerCase());
         if(!gamemodeData){
             let gamemodes = GAMEMODES.map(g => `${g.colorCode}${g.name}§f`);
-            player.tell('Gamemode not found! Application supports: ' + gamemodes.join(', '));
+            player.tell('Gamemode not found! Gamemode options: ' + gamemodes.join(', '));
             return false;
         }
     
@@ -651,8 +660,15 @@ ServerEvents.commandRegistry((event) => {
                 arenas.sort((a,b) => a.name.localeCompare(b.name));
                 c.source.player.tell('§2Arenas:');
                 for(const arena of arenas){
-                    let gamemode = getArenaGamemode(arena);
-                    c.source.player.tell(`${gamemode?.colorCode}${arena.gamemode.toUpperCase()} §f${arena.name}`);
+                    let gamemodes = arena.gamemodes;
+                    let gamemodeText = "";
+                    for(const gamemode of gamemodes){
+                        let gamemodeData = GAMEMODES.find(g => g.name == gamemode.name);
+                        if(gamemodeData){
+                            gamemodeText += `${gamemodeData.colorCode}${gamemode.name}§f `;
+                        }
+                    }
+                    c.source.player.tell(`${gamemodeText.trim()} §f${arena.name}`);
                 }
                 return 1;
             })
@@ -708,6 +724,99 @@ ServerEvents.commandRegistry((event) => {
                 return 1
             }
         ))))
+        .then(Commands.literal('gamemodes')
+            .then(Commands.literal('add')
+            .then(Commands.argument('name', Arguments.STRING.create(event))
+            .then(Commands.argument('gamemode', Arguments.STRING.create(event))
+                .executes(c => {
+                    let name = Arguments.STRING.getResult(c, 'name');
+                    let gamemode = Arguments.STRING.getResult(c, 'gamemode');
+                    let arena = prGetArenaFromName(c.source.player, name);
+                    if(!arena) return 1;
+                    let gamemodeData = prGetGamemodeFromName(c.source.player, gamemode);
+                    if(!gamemodeData) return 1;
+
+                    if(arena.gamemodes.some(g => g.name.toLowerCase() == gamemode.toLowerCase())){
+                        c.source.player.tell('Gamemode already added!');
+                        return 1;
+                    }
+
+                    arena.gamemodes.push({name: gamemodeData.name});
+                    saveArenaData(arena);
+                    c.source.player.tell('Gamemode added!');
+                    return 1;
+                }
+            ))))
+            .then(Commands.literal('remove')
+            .then(Commands.argument('name', Arguments.STRING.create(event))
+            .then(Commands.argument('gamemode', Arguments.STRING.create(event))
+                .executes(c => {
+                    let name = Arguments.STRING.getResult(c, 'name');
+                    let gamemode = Arguments.STRING.getResult(c, 'gamemode');
+                    let arena = prGetArenaFromName(c.source.player, name);
+                    if(!arena) return 1;
+
+                    let gamemodeData = prGetGamemodeFromName(c.source.player, gamemode);
+                    if(!gamemodeData) return 1;
+
+                    if(!arena.gamemodes.some(g => g.name.toLowerCase() == gamemode.toLowerCase())){
+                        c.source.player.tell('Gamemode is not available for this arena!');
+                        return 1;
+                    }
+
+                    arena.gamemodes = arena.gamemodes.filter(g => g.name.toLowerCase() != gamemode.toLowerCase());
+                    let arenaTeams = [];
+                    for(const gamemode of arena.gamemodes){
+                        let gamemodeData = GAMEMODES.find(g => g.name == gamemode);
+                        if(gamemodeData){
+                            for(const team of gamemodeData.teams){
+                                arenaTeams.push(team.team);
+                            }
+                        }
+                    }
+                    let spawnTeams = arena.spawns.map(s => s.team);
+                    let teamsNotNeeded = spawnTeams.filter(t => !arenaTeams.some(a => a.team == t));
+                    for(const team of teamsNotNeeded){
+                        let teamData = getTeam(team);
+                        if(!teamData) continue;
+                        let teamSpawns = arena.spawns.filter(s => s.team == team);
+                        for(const spawn of teamSpawns){
+                            let block = c.source.server.overworld().getBlock(spawn.x, spawn.y, spawn.z);
+                            block.set(spawn.original_block);
+                        }
+                        arena.spawns = arena.spawns.filter(s => s.team != team);
+                    }
+
+                    saveArenaData(arena);
+                    c.source.player.tell('Gamemode removed!');
+                    return 1;
+                }
+            ))))
+            .then(Commands.literal('list')
+                .then(Commands.argument('name', Arguments.STRING.create(event))
+                    .executes(c => {
+                        let name = Arguments.STRING.getResult(c, 'name');
+                        let arena = getArenaData(name);
+                        if(!arena){
+                            c.source.player.tell('Arena not found!');
+                            return 1;
+                        }
+                        let gamemodes = arena.gamemodes.map(g => {
+                            let gamemodeData = GAMEMODES.find(gd => gd.name == g);
+                            if(gamemodeData){
+                                return `${gamemodeData.colorCode}${gamemodeData.name}§f`;
+                            }
+                        });
+                        c.source.player.tell('§2Gamemodes: ' + gamemodes.join(', '));
+                        return 1;
+                    }))
+                .executes(c => {
+                    let gamemodes = GAMEMODES.map(g => `${g.colorCode}${g.name}§f`);
+                    c.source.player.tell('§2Gamemodes: ' + gamemodes.join(', '));
+                    return 1;
+                }
+            ))
+        )
     );
 });
 
