@@ -481,7 +481,16 @@ function deleteArena(arena, player){
 function getAllArenas(){
     let server = Utils.getServer();
     if(!server) return;
-    return server.persistentData.get("kath").arenas;
+    let arenas = server.persistentData.get("kath").arenas;
+    if(!arenas) return [];
+
+    let initArenas = [];
+    for(const arena of arenas){
+        let initArena = getArenaData(arena.name);
+        initArenas.push(initArena);
+    }
+
+    return initArenas;
 }
 
 /**
@@ -643,7 +652,7 @@ ServerEvents.commandRegistry((event) => {
                 c.source.player.tell('§2Arenas:');
                 for(const arena of arenas){
                     let gamemode = getArenaGamemode(arena);
-                    c.source.player.tell(`${gamemode.colorCode}${arena.gamemode.toUpperCase()} §f${arena.name}`);
+                    c.source.player.tell(`${gamemode?.colorCode}${arena.gamemode.toUpperCase()} §f${arena.name}`);
                 }
                 return 1;
             })

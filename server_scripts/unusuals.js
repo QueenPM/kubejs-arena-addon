@@ -46,15 +46,20 @@ const UNUSUALS = {
 
 const PI = 3.14159;
 
-let equipped = {
-    queenpm: "heart"   
-}
+const equipped = [
+    {
+        name: "QueenPM",
+        effect: "crown"
+    }
+]
 
 PlayerEvents.tick((event) => {
-    let unusual = UNUSUALS[event.player.username.toLowerCase()]
+    let player = event.player;
+    let found = equipped.find(e => e.name == player.username);
+    if(!found) return;
+    let unusual = UNUSUALS[found.effect];
     if(!unusual) return;
 
-    let player = event.player;
     let effects = unusual.effects;
     let timer = unusual.timer;
     if (event.server.getTickCount() % timer != 0) return;
