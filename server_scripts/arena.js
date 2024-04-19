@@ -759,11 +759,13 @@ BlockEvents.rightClicked((event) =>{
             // Check if a spawn by this coordinates already exists
             let foundSpawn = arena.spawns.find(s => s.x == x && s.y == y && s.z == z);
             let originalBlock = block.id;
+            let useBlock = foundTeam.spawnBlock;
             if(foundSpawn){
                 if(foundSpawn.team == spawn){
                     return;
                 }else{
                     originalBlock = foundSpawn.original_block;
+                    useBlock = "supplementaries:checker_block"
                 }
             }
 
@@ -775,7 +777,7 @@ BlockEvents.rightClicked((event) =>{
                 original_block: originalBlock,
             });
             // Replace the block with concrete
-            block.set(foundTeam.spawnBlock);
+            block.set(useBlock);
             
             player.displayClientMessage(`§aArena ${arenaName} ${spawn} spawn set to ${x}, ${y}, ${z}!`, true)
             saveArenaData(arenaName, arena);
