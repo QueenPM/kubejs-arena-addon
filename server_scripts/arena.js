@@ -424,7 +424,7 @@ function createArena(name, gamemode, player){
             return false;
         }
 
-        let gamemodeData = getArenaGamemode(gamemode);
+        let gamemodeData = GAMEMODES.find(g=>g.name.toLowerCase() == gamemode.toLowerCase());
         if(!gamemodeData){
             let gamemodes = GAMEMODES.map(g => `§2${g.name}§f`);
             player.tell('Gamemode not found! Application supports: ' + gamemodes.join(', '));
