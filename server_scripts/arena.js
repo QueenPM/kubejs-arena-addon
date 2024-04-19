@@ -187,12 +187,19 @@ function startArena(arenaName, player, selectGamemode){
         return;
     }
     let availableGamemodes = arena.gamemodes;
-    if(!availableGamemodes.some(g=>g.toLowerCase() == selectGamemode.toLowerCase())){
+    if(!selectGamemode){
+        selectGamemode = availableGamemodes[0]?.name;
+    }
+    if(!selectGamemode){
+        player.tell("No gamemodes available for this arena!");
+        return;
+    }
+    if(!availableGamemodes.some(g=>g.name.toLowerCase() == selectGamemode.toLowerCase())){
         player.tell("Gamemode not available for this arena!");
         return;
     }
-
-    let gamemode = getArenaGamemode(gamemode);
+    arena.gamemode = selectGamemode;
+    let gamemode = getArenaGamemode(arena);
     if(!gamemode){
         player.tell("Gamemode not found!");
         return;
@@ -274,7 +281,6 @@ function startArena(arenaName, player, selectGamemode){
     server.runCommandSilent(`gamerule naturalRegeneration false`);
 
     arena.active = Date.now();
-    arena.gamemode = gamemode.name;
     saveArenaData(arena);
 
     for(const team of requiredTeams){
@@ -594,13 +600,24 @@ ServerEvents.commandRegistry((event) => {
             .executes(c => {
                 let name = Arguments.STRING.getResult(c, 'name');
                 try{
-                    let res = startArena(name, c.source.player);
+                    startArena(name, c.source.player);
                     return 1;
                 }catch(e){
                     print(e)
                 }
-            }
-        )))
+            })
+            .then(Commands.argument('gamemode', Arguments.STRING.create(event))
+                .executes(c => {
+                    let name = Arguments.STRING.getResult(c, 'name');
+                    let gamemode = Arguments.STRING.getResult(c, 'gamemode');
+                    try{
+                        startArena(name, c.source.player, gamemode);
+                        return 1;
+                    }catch(e){
+                        print(e)
+                    }
+                }
+        ))))
         .then(Commands.literal('stop')
             .executes(c => {
                 let res = stopActiveArena();
