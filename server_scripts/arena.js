@@ -424,8 +424,8 @@ function createArena(name, gamemode, player){
             return false;
         }
 
-        let gamemode = getArenaGamemode(gamemode);
-        if(!gamemode){
+        let gamemodeData = getArenaGamemode(gamemode);
+        if(!gamemodeData){
             let gamemodes = GAMEMODES.map(g => `§2${g.name}§f`);
             player.tell('Gamemode not found! Application supports: ' + gamemodes.join(', '));
             return false;
@@ -434,7 +434,7 @@ function createArena(name, gamemode, player){
         /** @type {ArenaData} */
         let data =  {
             name: name,
-            gamemode: gamemode.name
+            gamemode: gamemodeData.name
         };
         saveArenaData(data);
         data = getArenaData(name);
@@ -443,6 +443,35 @@ function createArena(name, gamemode, player){
         print(e)
         return false;
     }
+}
+
+/**
+ * Deletes an Arena
+ * @param {ArenaData} arena 
+ * @param {Internal.ServerPlayer} player 
+ */
+function deleteArena(arena, player){
+    let server = Utils.getServer();
+    if(!server) return;
+    let arenas = getAllArenas();
+    let index = arenas.findIndex(a => a.name == arena.name);
+    if(index == -1){
+        player.tell('Arena not found!');
+        return;
+    }
+    if(arena.active > 0){
+        player.tell('Arena is currently active!');
+        return;
+    }
+    arenas.splice(index, 1);
+    // Replace all spawnpoints to their original block
+    for(const spawn of arena.spawns){
+        let block = server.overworld().getBlock(spawn.x, spawn.y, spawn.z);
+        block.set(spawn.original_block);
+    }
+    server.persistentData.put("kath", {arenas: arenas});
+    player.tell('Arena deleted!');
+
 }
 
 /**
@@ -597,18 +626,9 @@ ServerEvents.commandRegistry((event) => {
         .then(Commands.argument('name', Arguments.STRING.create(event))
             .executes(c => {
                 let name = Arguments.STRING.getResult(c, 'name');
-                let arenas = getAllArenas();
-                if(!arenas) {
-                    c.source.player.tell('No arenas found!');
-                    return 1;
-                }
-                if(arenas[name]){
-                    delete arenas[name];
-                    c.source.player.tell('Arena deleted!');
-                    return 1;
-                }else{
-                    c.source.player.tell('Arena not found!');
-                }
+                let arena = getArenaData(name);
+                deleteArena(arena, c.source.player);
+                return 1;
             }
         )))
         .then(Commands.literal('list')
