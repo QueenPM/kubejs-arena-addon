@@ -21,7 +21,7 @@ const UNUSUALS = {
         ],
         timer: 1,
         radius: 0.3,
-        rotationSpeed: 10,
+        rotationSpeed: 20,
         offsetY: 0
     },
     heart:{
@@ -50,6 +50,14 @@ const equipped = [
     {
         name: "QueenPM",
         effect: "crown"
+    },
+    {
+        name: "UnknownLady",
+        effect: "heart"
+    },
+    {
+        name: "AxolDyci",
+        effect: "ash"
     }
 ]
 
