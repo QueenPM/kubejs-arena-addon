@@ -668,7 +668,7 @@ ServerEvents.commandRegistry((event) => {
                             gamemodeText += `${gamemodeData.colorCode}${gamemode.name}§f `;
                         }
                     }
-                    c.source.player.tell(`${gamemodeText.trim()} §f${arena.name}`);
+                    c.source.player.tell(`${gamemodeText}§f${arena.name}`);
                 }
                 return 1;
             })
