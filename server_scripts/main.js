@@ -169,7 +169,7 @@ function savePlayerData(player, data){
 /**
  * Gets the data of an arena
  * @param {string} arenaName 
- * @returns {ArenaData|undefined}
+ * @returns {ArenaData}
  */
 function getArenaData(arenaName){
     let psData = getPSData();

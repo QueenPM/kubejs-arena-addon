@@ -412,20 +412,29 @@ PlayerEvents.respawned((event)=>{
 /**
  * Helper function for creating an arena with a name
  * @param {string} name 
+ * @param {string} gamemode
  * @param {Internal.ServerPlayer} player
  * @returns 
  */
-function createArena(name, player){
+function createArena(name, gamemode, player){
     try{
         let arena = getArenaData(name);
         if(arena){
             player.tell('Arena already exists! Use /arena config to configure it.');
             return false;
         }
+
+        let gamemode = getArenaGamemode(gamemode);
+        if(!gamemode){
+            let gamemodes = GAMEMODES.map(g => `§2${g.name}§f`);
+            player.tell('Gamemode not found! Application supports: ' + gamemodes.join(', '));
+            return false;
+        }
     
         /** @type {ArenaData} */
         let data =  {
-            name: name
+            name: name,
+            gamemode: gamemode.name
         };
         saveArenaData(data);
         data = getArenaData(name);
@@ -449,27 +458,27 @@ function getAllArenas(){
 /**
  * Gives the player the tools to configure an arena
  * @param {Internal.ServerPlayer} player 
- * @param {*} arenaName 
+ * @param {ArenaData} arena 
  */
-function giveArenaTools(player, arenaName){ // TODO we can clean this up to be nicer
+function giveArenaTools(player, arena){ // TODO we can clean this up to be nicer
     let tools = [];
-    let gamemode = getArenaGamemode(getArenaData(arenaName));
+    let gamemode = getArenaGamemode(arena);
     if(!gamemode) return;
     for(const team of gamemode.teams){
-        let team = getTeam(team.team);
-        if(!team) continue;
+        let teamData = getTeam(team.team);
+        if(!teamData) continue;
         tools.push({
-            item: team.teamMarkerItem,
+            item: teamData.teamMarkerItem,
             nbt:{
                 display:{
-                    Name: `{"text":"Spawn - ${arenaName}"}`,
+                    Name: `{"text":"Spawn - ${arena}"}`,
                     Lore: [
-                        `{"text":"Set ${team}'s Spawn Location"}`
+                        `{"text":"Set ${teamData}'s Spawn Location"}`
                     ]
                 },
                 arena_tool:1,
-                spawn:team.name,
-                arena_name: arenaName
+                spawn:teamData.name,
+                arena_name: arena
             }
         })
     }
@@ -482,14 +491,14 @@ function giveArenaTools(player, arenaName){ // TODO we can clean this up to be n
         item: "supplementaries:soap",
         nbt:{
             display:{
-                Name: `{"text":"Arena Tool Clear Spawn - ${arenaName}"}`,
+                Name: `{"text":"Arena Tool Clear Spawn - ${arena}"}`,
                 Lore: [
                     `{"text":"Clear a spawn point"}`
                 ]
             },
             arena_tool:1,
             clear_spawn:1,
-            arena_name: arenaName
+            arena_name: arena
         }
     })
 }
@@ -501,51 +510,50 @@ ServerEvents.commandRegistry((event) => {
         .requires(s => s.hasPermission(2)) // Check if the player has operator privileges
         // Create a new Arena
         .then(Commands.literal('create')
-            .then(Commands.argument('name', Arguments.STRING.create(event))
-                .executes(c => {
-                    let name = Arguments.STRING.getResult(c, 'name');
-                    try{
-                        let res = createArena(name, c.source.player);
-                        if(res){
-                            giveArenaTools(c.source.player, name);
-                            return 1;
-                        }else{
-                            return 1;
-                        }
-                    }catch(e){
-                        c.source.player.tell('Something went wrong creating your arena.')
+        .then(Commands.argument('gamemode', Arguments.STRING.create(event))
+        .then(Commands.argument('name', Arguments.STRING.create(event))
+            .executes(c => {
+                let name = Arguments.STRING.getResult(c, 'name');
+                let gamemode = Arguments.STRING.getResult(c, 'gamemode');
+                try{
+                    let res = createArena(name, gamemode,c.source.player);
+                    if(res){
+                        giveArenaTools(c.source.player, res);
+                        return 1;
+                    }else{
+                        return 1;
                     }
+                }catch(e){
+                    c.source.player.tell('Something went wrong creating your arena.')
                 }
-            )
-        ))
+            }
+        ))))
         .then(Commands.literal('config')
-            .then(Commands.argument('name', Arguments.STRING.create(event))
-                .executes(c => {
-                    let name = Arguments.STRING.getResult(c, 'name');
-                    let arena = getArenaData(name);
-                    if(!arena){
-                        c.source.player.tell('Arena not found!');
-                        return 1;
-                    }
+        .then(Commands.argument('name', Arguments.STRING.create(event))
+            .executes(c => {
+                let name = Arguments.STRING.getResult(c, 'name');
+                let arena = getArenaData(name);
+                if(!arena){
+                    c.source.player.tell('Arena not found!');
+                    return 1;
+                }
 
-                    giveArenaTools(c.source.player, name);
-                    return 1
-                }
-            )
-        ))
+                giveArenaTools(c.source.player, arena);
+                return 1
+            }
+        )))
         .then(Commands.literal('start')
-            .then(Commands.argument('name', Arguments.STRING.create(event))
-                .executes(c => {
-                    let name = Arguments.STRING.getResult(c, 'name');
-                    try{
-                        let res = startArena(name, c.source.player);
-                        return 1;
-                    }catch(e){
-                        print(e)
-                    }
+        .then(Commands.argument('name', Arguments.STRING.create(event))
+            .executes(c => {
+                let name = Arguments.STRING.getResult(c, 'name');
+                try{
+                    let res = startArena(name, c.source.player);
+                    return 1;
+                }catch(e){
+                    print(e)
                 }
-            )
-        ))
+            }
+        )))
         .then(Commands.literal('stop')
             .executes(c => {
                 let res = stopActiveArena();
@@ -555,56 +563,54 @@ ServerEvents.commandRegistry((event) => {
                     c.source.player.tell('No active arena found!');
                     return 1;
                 }
-            })
-        )
+            }
+        ))
         .then(Commands.literal('clear-spawns')
-            .then(Commands.argument('name', Arguments.STRING.create(event))
-                .executes(c => {
+        .then(Commands.argument('name', Arguments.STRING.create(event))
+            .executes(c => {
+                try{
+                    let name = Arguments.STRING.getResult(c, 'name');
+                    let arena = getArenaData(name);
+                    if(!arena){
+                        c.source.player.tell('Arena not found!');
+                        return 1;
+                    }
                     try{
-                        let name = Arguments.STRING.getResult(c, 'name');
-                        let arena = getArenaData(name);
-                        if(!arena){
-                            c.source.player.tell('Arena not found!');
-                            return 1;
+                        for(let spawn of arena.spawns){
+                            let block = c.source.server.overworld().getBlock(spawn.x, spawn.y, spawn.z);
+                            block.set(spawn.original_block);
                         }
-                        try{
-                            for(let spawn of arena.spawns){
-                                let block = c.source.server.overworld().getBlock(spawn.x, spawn.y, spawn.z);
-                                block.set(spawn.original_block);
-                            }
-                        }catch(e){
-                            print(e)
-                            return 0
-                        }
-                        arena.spawns = [];
-                        saveArenaData(name, arena);
-                        c.source.player.tell('Spawns cleared!');
-                        return 1
                     }catch(e){
                         print(e)
+                        return 0
                     }
+                    arena.spawns = [];
+                    saveArenaData(name, arena);
+                    c.source.player.tell('Spawns cleared!');
+                    return 1
+                }catch(e){
+                    print(e)
                 }
-            )
-        ))
+            }
+        )))
         .then(Commands.literal('delete')
-            .then(Commands.argument('name', Arguments.STRING.create(event))
-                .executes(c => {
-                    let name = Arguments.STRING.getResult(c, 'name');
-                    let arenas = getAllArenas();
-                    if(!arenas) {
-                        c.source.player.tell('No arenas found!');
-                        return 1;
-                    }
-                    if(arenas[name]){
-                        delete arenas[name];
-                        c.source.player.tell('Arena deleted!');
-                        return 1;
-                    }else{
-                        c.source.player.tell('Arena not found!');
-                    }
+        .then(Commands.argument('name', Arguments.STRING.create(event))
+            .executes(c => {
+                let name = Arguments.STRING.getResult(c, 'name');
+                let arenas = getAllArenas();
+                if(!arenas) {
+                    c.source.player.tell('No arenas found!');
+                    return 1;
                 }
-            )
-        ))
+                if(arenas[name]){
+                    delete arenas[name];
+                    c.source.player.tell('Arena deleted!');
+                    return 1;
+                }else{
+                    c.source.player.tell('Arena not found!');
+                }
+            }
+        )))
         .then(Commands.literal('list')
             .executes(c => {
                 let arenas = getAllArenas();
@@ -612,40 +618,65 @@ ServerEvents.commandRegistry((event) => {
                     c.source.player.tell('No arenas found!');
                     return 1;
                 }
+                // Sort arenas by name
+                arenas.sort((a,b) => a.name.localeCompare(b.name));
+                c.source.player.tell('§2Arenas:');
                 for(const arena of arenas){
-                    c.source.player.tell(arena.name);
+                    c.source.player.tell(`§a${arena.gamemode.toUpperCase()} §f${arena.name}`);
                 }
                 return 1;
             })
         )
         .then(Commands.literal('tp')
-            .then(Commands.argument('name', Arguments.STRING.create(event))
-                .executes(c => {
-                    let name = Arguments.STRING.getResult(c, 'name');
-                    let arena = getArenaData(name);
-                    if(!arena){
-                        c.source.player.tell('Arena not found!');
-                        return 1;
-                    }
-                    if(arena.spawns.length > 0){
-                        let spawn = arena.spawns[0];
-                        c.source.player.teleportTo(spawn.x+0.5, spawn.y+1, spawn.z+0.5);
-                        return 1;
-                    }
-                    if(arena.corner1 || arena.corner2){
-                        let corner1 = arena.corner1;
-                        let corner2 = arena.corner2;
-                        let x = Math.floor((corner1.x + corner2.x) / 2);
-                        let z = Math.floor((corner1.z + corner2.z) / 2);
-                        c.source.player.teleportTo(x, 100, z);
-                        return 1;
-                    }
-
-                    c.source.player.tell('Couldn\'t teleport you to the Arena because no Spawns or Corners were set.');
+        .then(Commands.argument('name', Arguments.STRING.create(event))
+            .executes(c => {
+                let name = Arguments.STRING.getResult(c, 'name');
+                let arena = getArenaData(name);
+                if(!arena){
+                    c.source.player.tell('Arena not found!');
                     return 1;
                 }
-            )
-        ))
+                if(arena.spawns.length > 0){
+                    let spawn = arena.spawns[0];
+                    c.source.player.teleportTo(spawn.x+0.5, spawn.y+1, spawn.z+0.5);
+                    return 1;
+                }
+                if(arena.corner1 || arena.corner2){
+                    let corner1 = arena.corner1;
+                    let corner2 = arena.corner2;
+                    let x = Math.floor((corner1.x + corner2.x) / 2);
+                    let z = Math.floor((corner1.z + corner2.z) / 2);
+                    c.source.player.teleportTo(x, 100, z);
+                    return 1;
+                }
+
+                c.source.player.tell('Couldn\'t teleport you to the Arena because no Spawns or Corners were set.');
+                return 1;
+            }
+        )))
+        .then(Commands.literal('rename')
+        .then(Commands.argument('name', Arguments.STRING.create(event))
+        .then(Commands.argument('newName', Arguments.STRING.create(event))
+            .executes(c => {
+                let name = Arguments.STRING.getResult(c, 'name');
+                let newName = Arguments.STRING.getResult(c, 'newName');
+                let arena = getArenaData(name);
+                if(!arena){
+                    c.source.player.tell('Arena not found!');
+                    return 1;
+                }
+
+                let existingArena = getArenaData(newName);
+                if(existingArena){
+                    c.source.player.tell('Arena with that name already exists!');
+                    return 1;
+                }
+
+                arena.name = newName;
+                saveArenaData(arena);
+                c.source.player.tell('Arena renamed!');
+            }
+        ))))
     );
 });
 
