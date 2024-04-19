@@ -790,8 +790,8 @@ BlockEvents.rightClicked((event) =>{
             if(foundSpawn){
                 block.set(foundSpawn.original_block);
                 arena.spawns = arena.spawns.filter(s => s.x != x || s.y != y || s.z != z);
-                saveArenaData(arenaName, arena);
                 player.displayClientMessage(`Spawn at ${x}, ${y}, ${z} cleared!`, true)
+                saveArenaData(arenaName, arena);
             }
         }
     }catch(e){
