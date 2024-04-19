@@ -705,6 +705,7 @@ ServerEvents.commandRegistry((event) => {
                 arena.name = newName;
                 saveArenaData(arena);
                 c.source.player.tell('Arena renamed!');
+                return 1
             }
         ))))
     );
