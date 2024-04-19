@@ -426,7 +426,7 @@ function createArena(name, gamemode, player){
 
         let gamemodeData = GAMEMODES.find(g=>g.name.toLowerCase() == gamemode.toLowerCase());
         if(!gamemodeData){
-            let gamemodes = GAMEMODES.map(g => `§2${g.name}§f`);
+            let gamemodes = GAMEMODES.map(g => `${g.colorCode}${g.name}§f`);
             player.tell('Gamemode not found! Application supports: ' + gamemodes.join(', '));
             return false;
         }
@@ -642,7 +642,8 @@ ServerEvents.commandRegistry((event) => {
                 arenas.sort((a,b) => a.name.localeCompare(b.name));
                 c.source.player.tell('§2Arenas:');
                 for(const arena of arenas){
-                    c.source.player.tell(`§a${arena.gamemode.toUpperCase()} §f${arena.name}`);
+                    let gamemode = getArenaGamemode(arena);
+                    c.source.player.tell(`${gamemode.colorCode}${arena.gamemode.toUpperCase()} §f${arena.name}`);
                 }
                 return 1;
             })

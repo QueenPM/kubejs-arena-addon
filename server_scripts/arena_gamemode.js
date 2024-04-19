@@ -5,6 +5,7 @@
  * @property {string} description - The description of the gamemode
  * @property {Array<ArenaGamemodeTeamRules>} teams - The number of players per team
  * @property {number} timeLimit - The time limit of the gamemode
+ * @property {string} colorCode - The Minecraft Color Code for Text
  */
 
 /**
@@ -36,7 +37,8 @@ const GAMEMODES = [
                 maxPlayers: 0,
                 minPlayers: 1
             }
-        ]
+        ],
+        colorCode: "§c"
     },
     {
         name: "ffa",
@@ -49,7 +51,8 @@ const GAMEMODES = [
                 maxPlayers: 0,
                 minPlayers: 2
             }
-        ]
+        ],
+        colorCode: "§7"
     }
 ]
 
