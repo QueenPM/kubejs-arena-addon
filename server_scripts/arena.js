@@ -716,6 +716,11 @@ BlockEvents.rightClicked((event) =>{
             player.tell("An arena by this name wasnt found.")
             return;
         }
+
+        if(arena.active > 0){
+            player.tell('Arena is currently active!');
+            return;
+        }
         
         let corner = item.nbt.corner;
         if(corner){
