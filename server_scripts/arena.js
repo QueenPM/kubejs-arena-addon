@@ -42,7 +42,7 @@ function getPlayersInArena(arenaName){
     for(const player of players){
         let pData = getPlayerData(player.username);
         if(!pData) continue;
-        if(pData.arena == arenaName){
+        if(pData.arena.toLowerCase() == arenaName.toLowerCase()){
             arenaPlayers.push(player);
         }
     }
@@ -85,7 +85,7 @@ function stopActiveArena(){
         server.runCommandSilent(`bossbar set minecraft:0 visible false`);
 
         let points = getAllPlayerPoints();
-        let players = getPlayersInArena(activeArena.name.toLowerCase());
+        let players = getPlayersInArena(activeArena.name);
         server.tell(`§2Arena §5${activeArena.name} §2has concluded!`);
 
         if(players.length > 0){
