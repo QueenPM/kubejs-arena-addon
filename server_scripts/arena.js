@@ -515,10 +515,20 @@ function getAllArenas(){
  */
 function giveArenaTools(player, arena){ // TODO we can clean this up to be nicer
     let tools = [];
-    let gamemode = getArenaGamemode(arena);
-    if(!gamemode) return;
-    for(const team of gamemode.teams){
-        let teamData = getTeam(team.team);
+    let gamemodes = arena.gamemodes
+    let teams = [];
+    for(const gamemode of gamemodes){
+        let gamemodeData = GAMEMODES.find(g => g.name == gamemode.name);
+        if(!gamemodeData) continue;
+        for(const team of gamemodeData.teams){
+            if(!teams.some(t=>t == team.team)){
+                teams.push(team.team);
+            }
+        }
+    }
+
+    for(const team of teams){
+        let teamData = getTeam(team);
         if(!teamData) continue;
         tools.push({
             item: teamData.teamMarkerItem,
@@ -526,7 +536,7 @@ function giveArenaTools(player, arena){ // TODO we can clean this up to be nicer
                 display:{
                     Name: `{"text":"Spawn - ${arena}"}`,
                     Lore: [
-                        `{"text":"Set ${teamData}'s Spawn Location"}`
+                        `{"text":"Set Team ${teamData.name}'s Spawn Location"}`
                     ]
                 },
                 arena_tool:1,
