@@ -108,6 +108,8 @@ function stopActiveArena(){
                 // It was Solo
                 winningPlayer = points[0];
             }
+
+            let worldSpawn = server.overworld().getSharedSpawnPos();
     
             for(const participatingPlayer of players){
                 let theirPoint = points.find(p => p.player.username == participatingPlayer.username);
@@ -143,7 +145,7 @@ function stopActiveArena(){
                     }
                     savePlayerData(participatingPlayer, data);
                 }
-                
+                server.runCommandSilent(`spawnpoint ${participatingPlayer.username} ${worldSpawn.x} ${worldSpawn.y} ${worldSpawn.z}`);
                 leaveTeam(participatingPlayer);
                 server.schedule(50, ()=>{
                     server.runCommandSilent(`execute as ${participatingPlayer.username} run summon firework_rocket ~ ~ ~ {LifeTime:0,FireworksItem:{id:firework_rocket,Count:1,tag:{Fireworks:{Explosions:[{Colors:[I;16711680,255]}]}}}}`);
@@ -387,6 +389,11 @@ EntityEvents.death((event)=>{
     deadData.killStreak = 0;
     savePlayerData(deadPlayer, deadData);
     savePlayerData(killerPlayer, killerData);
+
+    let availableSpawns = activeArena.spawns.filter(s => s.team == team);
+    if(availableSpawns.length == 0) return;
+    let spawn = availableSpawns[Math.floor(Math.random() * availableSpawns.length)];
+    event.server.runCommandSilent(`spawnpoint ${deadPlayer.username} ${spawn.x + 0.5} ${spawn.y + 2} ${spawn.z + 0.5}`);
 })
 
 PlayerEvents.respawned((event)=>{
@@ -404,10 +411,10 @@ PlayerEvents.respawned((event)=>{
         let team = pData.team;
         if(!team) return;
 
-        let availableSpawns = activeArena.spawns.filter(s => s.team == team);
-        if(availableSpawns.length == 0) return;
-        let spawn = availableSpawns[Math.floor(Math.random() * availableSpawns.length)];
-        event.player.teleportTo(spawn.x + 0.5, spawn.y + 2, spawn.z + 0.5);
+        // let availableSpawns = activeArena.spawns.filter(s => s.team == team);
+        // if(availableSpawns.length == 0) return;
+        // let spawn = availableSpawns[Math.floor(Math.random() * availableSpawns.length)];
+        // event.player.teleportTo(spawn.x + 0.5, spawn.y + 2, spawn.z + 0.5);
 
         let teamData = getTeam(team);
         if(teamData){
