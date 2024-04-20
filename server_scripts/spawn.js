@@ -74,6 +74,7 @@ BlockEvents.rightClicked((event) =>{
                     return;
                 }else{
                     originalBlock = foundSpawn.original_block;
+                    serverData.teamDesignationBlocks = serverData.teamDesignationBlocks.filter(s => s.x != x || s.y != y || s.z != z);
                 }
             }
 
