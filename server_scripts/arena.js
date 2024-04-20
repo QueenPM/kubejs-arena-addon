@@ -84,72 +84,65 @@ function stopActiveArena(){
         // Hide the bossbar
         server.runCommandSilent(`bossbar set minecraft:0 visible false`);
 
-        let points = getAllPlayerPoints();
         let players = getPlayersInArena(activeArena.name);
         server.tell(`§2Arena §5${activeArena.name} §2has concluded!`);
 
+        let points = [];
+
         if(players.length > 0){
-            server.tell(`§bHere are the results:`);
-            let winningTeam = null;
-            let winningPlayer = null;
-            if(gamemode.teams > 1){
-                // It was Team Based
-                let teamPoints = {};
-                for(const point of points){
-                    server.tell(`§c* ${point.name} achieved §6${point.points} §cpoints!`);
-                    let team = getPlayerData(point.player.username).team;
-                    if(!team) continue;
-                    if(!teamPoints[team]) teamPoints[team] = 0;
-                    teamPoints[team] += point.points;
-                }
-        
-                winningTeam = teamPoints ? Object.keys(teamPoints).reduce((a, b) => teamPoints[a] > teamPoints[b] ? a : b) : null;
-            }else{
-                // It was Solo
-                winningPlayer = points[0];
-            }
-
-            let worldSpawn = server.overworld().getSharedSpawnPos();
-    
             for(const participatingPlayer of players){
-                let theirPoint = points.find(p => p.player.username == participatingPlayer.username);
-                if(!theirPoint) continue;
-                participatingPlayer.tell(`§a---------------------------------------`);
-                participatingPlayer.tell(`§aYou achieved §6${theirPoint.points} §apoints!`);
-    
                 let data = getPlayerData(participatingPlayer.username);
-                if(data){
-                    data.points = 0;
-                    data.currentDeaths = 0;
-                    data.currentKills = 0;
-                    data.deathStreak = 0;
-                    data.killStreak = 0;
-                    data.arenaParticipation++;
-                    
-                    if(winningTeam){
-                        let team = participatingPlayer.team;
-                        if(team == winningTeam){
-                            let teamSize = players.filter(p => p.team == team).length;
-                            if(teamSize == 1){
-                                data.singleWins++;
-                            }else if(teamSize > 1){
-                                data.teamWins++;
-                            }
-                        }
-                    }
+                if(!data) continue;
+                participatingPlayer.tell(`§a---------------------------------------`);
+                participatingPlayer.tell(`§aYou achieved §6${data.points} §apoints!`);
+                server.tell(`§c* ${participatingPlayer.username} achieved §6${data.points} §cpoints!`);
+                points.push({name: participatingPlayer.username, points: data.points, team: data.team, player: participatingPlayer})
+                data.points = 0;
+                data.currentDeaths = 0;
+                data.currentKills = 0;
+                data.deathStreak = 0;
+                data.killStreak = 0;
+                data.arenaParticipation++;
 
-                    if(winningPlayer){
-                        if(winningPlayer.name.toLowerCase() == participatingPlayer.username.toLowerCase()){
-                            data.singleWins++;
-                        }
-                    }
-                    savePlayerData(participatingPlayer, data);
-                }
-                server.runCommandSilent(`spawnpoint ${participatingPlayer.username} ${worldSpawn.x} ${worldSpawn.y} ${worldSpawn.z}`);
+
+                savePlayerData(participatingPlayer, data);
+                
                 leaveTeam(participatingPlayer);
                 server.schedule(50, ()=>{
                     server.runCommandSilent(`execute as ${participatingPlayer.username} run summon firework_rocket ~ ~ ~ {LifeTime:0,FireworksItem:{id:firework_rocket,Count:1,tag:{Fireworks:{Explosions:[{Colors:[I;16711680,255]}]}}}}`);
                 })
+            }
+        }
+
+        points.sort((a,b) => b.points - a.points);
+        // If its a FFA
+        if(gamemode.teams.length == 1){
+            let winner = points[0];
+            server.tell(`§2The winner is ${winner.name} with §6${winner.points} §2points!`);
+            let playerData = getPlayerData(winner.name);
+            if(playerData){
+                playerData.singleWins++;
+                savePlayerData(winner.player, playerData);
+            }
+        }else if(gamemode.teams.length > 1){
+            // If its team based, award a win for everyone in the team
+            // Get the team with the most points
+            let teamPoints = [];
+            for(const team of gamemode.teams){
+                let teamPlayers = points.filter(p => p.team == team.team);
+                let totalPoints = teamPlayers.reduce((acc, p) => acc + p.points, 0);
+                teamPoints.push({team: team.team, points: totalPoints});
+            }
+            teamPoints.sort((a,b) => b.points - a.points);
+            let winningTeam = teamPoints[0];
+            let winningTeamPlayers = points.filter(p => p.team == winningTeam.team);
+            server.tell(`§2The winning team is ${getTeam(winningTeam.team).colorCode}Team ${winningTeam.team}§2 with §6${winningTeam.points} §2points!`);
+            for(const player of winningTeamPlayers){
+                let pData = getPlayerData(player.name);
+                if(pData){
+                    pData.teamWins++;
+                    savePlayerData(player.player, pData);
+                }
             }
         }
 
@@ -166,7 +159,6 @@ function stopActiveArena(){
 
             block.set(team.spawnBlock);
         }
-        showArenaScoreboard();
         return true;
     }
 }
@@ -272,13 +264,16 @@ function startArena(arenaName, player, selectGamemode){
         pData.arena = arenaName;
         arena.players.push(player.getStringUuid());
         playersAssignedToTeams[team]++;
+
+        // randomizeSpawn(player, arena);
+
         savePlayerData(player, pData);
     }
 
     // Set gamerules
     server.runCommandSilent(`gamerule doImmediateRespawn true`);
     server.runCommandSilent(`gamerule keepInventory true`);
-    server.runCommandSilent(`gamerule showDeathMessages true`);
+    server.runCommandSilent(`gamerule showDeathMessages false`);
     // Turn off hunger
     server.runCommandSilent(`gamerule naturalRegeneration false`);
 
@@ -389,11 +384,6 @@ EntityEvents.death((event)=>{
     deadData.killStreak = 0;
     savePlayerData(deadPlayer, deadData);
     savePlayerData(killerPlayer, killerData);
-
-    let availableSpawns = activeArena.spawns.filter(s => s.team == team);
-    if(availableSpawns.length == 0) return;
-    let spawn = availableSpawns[Math.floor(Math.random() * availableSpawns.length)];
-    event.server.runCommandSilent(`spawnpoint ${deadPlayer.username} ${spawn.x + 0.5} ${spawn.y + 2} ${spawn.z + 0.5}`);
 })
 
 PlayerEvents.respawned((event)=>{
@@ -411,10 +401,12 @@ PlayerEvents.respawned((event)=>{
         let team = pData.team;
         if(!team) return;
 
-        // let availableSpawns = activeArena.spawns.filter(s => s.team == team);
-        // if(availableSpawns.length == 0) return;
-        // let spawn = availableSpawns[Math.floor(Math.random() * availableSpawns.length)];
-        // event.player.teleportTo(spawn.x + 0.5, spawn.y + 2, spawn.z + 0.5);
+        let availableSpawns = activeArena.spawns.filter(s => s.team == team);
+        if(availableSpawns.length == 0) return;
+        let spawn = availableSpawns[Math.floor(Math.random() * availableSpawns.length)];
+        event.player.teleportTo(spawn.x + 0.5, spawn.y + 2, spawn.z + 0.5);
+
+        // randomizeSpawn(event.player, activeArena);
 
         let teamData = getTeam(team);
         if(teamData){
@@ -1001,6 +993,9 @@ ServerEvents.tick((event)=>{
         for(const arena of activeArenas){
             activeArenaTickEvent(arena, server);
         }
+        if(!activeArenas || activeArenas.length == 0){
+            showArenaScoreboard();
+        }
     }catch(e){
         print(e)
     }
@@ -1065,6 +1060,21 @@ function showArenaScoreboard(arena){
                 color = team.textColor;   
             }
             lines.push({text:`${point.name}: ${point.points} pts`, color: color});
+        }
+    }else{
+        let players = getAvailablePlayers();
+        if(players.length > 0){
+            lines.push({text:`Players ready: ${players.length}`, color: "green"});
+            for(const player of players){
+                let pData = getPlayerData(player.username);
+                if(!pData) continue;
+                let team = getTeam(pData.team);
+                let color = "white"
+                if(team){
+                    color = team.textColor;   
+                }
+                lines.push({text:`${player.username}`, color: color});
+            }
         }
     }
 

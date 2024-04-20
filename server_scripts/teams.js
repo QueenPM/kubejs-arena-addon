@@ -98,9 +98,6 @@ function joinTeam(player, team){
         let server = Utils.getServer();
         if(!server) return;
         
-        // Create the minecraft team
-        let teamName = foundTeam.name
-        
         pData.team = foundTeam.name;
         savePlayerData(player, pData);
 
@@ -186,7 +183,7 @@ ServerEvents.commandRegistry((event) => {
 
 // Change player team based on spawn blocks
 PlayerEvents.tick((event) => {
-    if(event.server.getTickCount() % 20 != 0) return;
+    if(event.server.getTickCount() % 10 != 0) return;
     let player = event.player;
     let server = event.server;
     if(!server) return;

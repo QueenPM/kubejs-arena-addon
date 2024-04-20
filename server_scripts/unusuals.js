@@ -58,6 +58,10 @@ const equipped = [
     {
         name: "AxolDyci",
         effect: "ash"
+    },
+    {
+        name: "RustyS",
+        effect: "splash"
     }
 ]
 
