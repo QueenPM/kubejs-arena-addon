@@ -16,7 +16,7 @@ function refillAmmo(player){
         }
         let ammoNeeded = null;
         for(const ammo of AMMO){
-            if(ammo.weapons.includes(item.id)){
+            if(ammo.weapons.some(item.id)){
                 ammoNeeded = ammo;
                 break;
             }
