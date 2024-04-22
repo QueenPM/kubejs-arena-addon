@@ -207,11 +207,11 @@ function startArena(arenaName, player, selectGamemode){
     let availablePlayers = getAvailablePlayers();
     let requiredTeams = gamemode.teams;
     for(const team of requiredTeams){
-        let teamPlayers = availablePlayers.filter(p => {
+        let teamPlayers = gamemode.teams.length > 1 ? availablePlayers.filter(p => {
             let pData = getPlayerData(p.username);
             if(!pData) return false;
             return pData.team == team.team;
-        });
+        }) : availablePlayers;
 
         let teamData = getTeam(team.team);
         if(teamPlayers.length < team.minPlayers){
