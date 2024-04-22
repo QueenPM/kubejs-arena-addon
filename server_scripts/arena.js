@@ -1062,9 +1062,11 @@ function showArenaScoreboard(arena){
             lines.push({text:`${point.name}: ${point.points} pts`, color: color});
         }
     }else{
+        // Get all available players who are not currently playing
         let players = getAvailablePlayers();
         if(players.length > 0){
             lines.push({text:`Players ready: ${players.length}`, color: "green"});
+            let sortedPlayers = [];
             for(const player of players){
                 let pData = getPlayerData(player.username);
                 if(!pData) continue;
@@ -1073,7 +1075,12 @@ function showArenaScoreboard(arena){
                 if(team){
                     color = team.textColor;   
                 }
-                lines.push({text:`${player.username}`, color: color});
+                sortedPlayers.push({name:player.username, team:team, color: color});
+            }
+            // Sort players by team
+            sortedPlayers.sort((a,b) => a.team.name.localeCompare(b.team.name));
+            for(const player of sortedPlayers){
+                lines.push({text:`${player.team.colorCode}${player.name}`, color: player.color});
             }
         }
     }
