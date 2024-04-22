@@ -53,6 +53,25 @@ const GAMEMODES = [
             }
         ],
         colorCode: "§7"
+    },
+    {
+        name: "1v1",
+        displayName: "1v1",
+        description: "Kill the other player to win",
+        timeLimit: 1000 * 60 * 5,
+        teams: [
+            {
+                team: "Blue",
+                maxPlayers: 1,
+                minPlayers: 1
+            },
+            {
+                team: "Red",
+                maxPlayers: 1,
+                minPlayers: 1
+            }
+        ],
+        colorCode: Color.GRAY
     }
 ]
 

@@ -369,10 +369,15 @@ EntityEvents.death((event)=>{
         killerData.killStreak++;
         killerData.deathStreak = 0;
         killerData.points++;
-        let missingHealth = 20 - Math.floor(killerPlayer.health);
-        let regenerationDuration = Math.ceil(missingHealth * 1.2);
-        event.server.runCommandSilent(`effect clear ${killerPlayer.username} minecraft:regeneration`);
-        event.server.runCommandSilent(`effect give ${killerPlayer.username} minecraft:regeneration ${regenerationDuration} 1 true`);
+        if(activeArena.gamemode != "1v1"){
+            let missingHealth = 20 - Math.floor(killerPlayer.health);
+            let regenerationDuration = Math.ceil(missingHealth * 1.2);
+            event.server.runCommandSilent(`effect clear ${killerPlayer.username} minecraft:regeneration`);
+            event.server.runCommandSilent(`effect give ${killerPlayer.username} minecraft:regeneration ${regenerationDuration} 1 true`);
+        }else{
+            event.server.runCommandSilent(`effect give ${killerPlayer.username} minecraft:instant_health 1 100 true`);
+
+        }
         event.server.runCommandSilent(`playsound minecraft:entity.experience_orb.pickup master ${killerPlayer.username} ${deadPlayer.x} ${deadPlayer.y} ${deadPlayer.z}`);
         killerPlayer.displayClientMessage(`§aYou've killed ${deadPlayer.username}`, true);
         if(killerData.killStreak > 2){
