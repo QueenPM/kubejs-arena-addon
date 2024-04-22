@@ -71,7 +71,7 @@ const GAMEMODES = [
                 minPlayers: 1
             }
         ],
-        colorCode: Color.GRAY
+        colorCode: Color.LIGHT_PURPLE
     }
 ]
 
