@@ -41,7 +41,7 @@ function getPlayersInArena(arenaName){
     let arenaPlayers = [];
     for(const player of players){
         let pData = getPlayerData(player.username);
-        if(!pData) continue;
+        if(!pData || !pData.arena) continue;
         if(pData.arena.toLowerCase() == arenaName.toLowerCase()){
             arenaPlayers.push(player);
         }
