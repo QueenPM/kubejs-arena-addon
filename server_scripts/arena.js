@@ -383,7 +383,9 @@ EntityEvents.death((event)=>{
             event.server.runCommandSilent(`effect give ${killerPlayer.username} minecraft:regeneration ${regenerationDuration} 1 true`);
         }else{
             event.server.runCommandSilent(`effect give ${killerPlayer.username} minecraft:instant_health 1 100 true`);
-
+            if(killerData.kit){
+                giveKit(killerData.kit, killerPlayer);
+            }
         }
         event.server.runCommandSilent(`playsound minecraft:entity.experience_orb.pickup master ${killerPlayer.username} ${deadPlayer.x} ${deadPlayer.y} ${deadPlayer.z}`);
         killerPlayer.displayClientMessage(`§aYou've killed ${deadPlayer.username}`, true);
