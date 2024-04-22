@@ -30,5 +30,9 @@ PlayerEvents.loggedIn((e)=>{
 
     leaveTeam(e.player);
     e.server.runCommandSilent(`attribute ${e.player.username} minecraft:generic.knockback_resistance base set 10`)
-    e.server.runCommandSilent(`attribute ${e.player.username} minecraft:generic.armor base set 15`)
+})
+
+
+PlayerEvents.respawned((e)=>{
+    e.server.runCommandSilent(`attribute ${e.player.username} minecraft:generic.knockback_resistance base set 10`)
 })
