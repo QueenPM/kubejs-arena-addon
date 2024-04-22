@@ -16,9 +16,12 @@ function refillAmmo(player){
         }
         let ammoNeeded = null;
         for(const ammo of AMMO){
-            if(ammo.weapons.some(item.id)){
-                ammoNeeded = ammo;
-                break;
+            if(!ammo.weapons) continue;
+            for(const weapon of ammo.weapons){
+                if(weapon == item.id){
+                    ammoNeeded = ammo;
+                    break;
+                }
             }
         }
         if(!ammoNeeded) continue;
@@ -34,7 +37,7 @@ function refillAmmo(player){
     }
 
     for(const ammo of typesOfAmmoNeeded){
-        let amount = 3 * AMMO.find(a => a.ammoId == ammo).stackSize;
+        let amount = 5 * AMMO.find(a => a.ammoId == ammo).stackSize;
         if(alreadyHasAmmo[ammo]){
             amount -= alreadyHasAmmo[ammo];
         }
