@@ -385,6 +385,7 @@ EntityEvents.death((event)=>{
             event.server.runCommandSilent(`effect give ${killerPlayer.username} minecraft:instant_health 1 100 true`);
             if(killerData.kit){
                 giveKit(killerData.kit, killerPlayer);
+                
             }
         }
         event.server.runCommandSilent(`playsound minecraft:entity.experience_orb.pickup master ${killerPlayer.username} ${deadPlayer.x} ${deadPlayer.y} ${deadPlayer.z}`);
@@ -393,6 +394,8 @@ EntityEvents.death((event)=>{
             event.server.runCommandSilent(`title @a actionbar "${killerPlayer.username} is on a §a${killerData.killStreak} kill streak!"`);
             print(`${killerTeamData.colorCode}${killerPlayer.username} §ais on a §a${killerData.killStreak} §akill streak!`)
         }
+
+        giveInvulnerability(killerPlayer, 3);
     }
 
     deadData.killStreak = 0;
@@ -405,33 +408,30 @@ PlayerEvents.respawned((event)=>{
         let pData = getPlayerData(event.player.username);
         if(!pData || !pData.arena) return;
     
+        
         if(pData.kit){
             giveKit(pData.kit, event.player);
         }
-        
         let activeArena = getArenaData(pData.arena);
         if(!activeArena || activeArena.active == 0) return;
         // Check if the player should respawn in an arena
         let team = pData.team;
         if(!team) return;
-
+        
         let availableSpawns = activeArena.spawns.filter(s => s.team == team);
         if(availableSpawns.length == 0) return;
         let spawn = availableSpawns[Math.floor(Math.random() * availableSpawns.length)];
         event.player.teleportTo(spawn.x + 0.5, spawn.y + 2, spawn.z + 0.5);
-
+        
         // randomizeSpawn(event.player, activeArena);
-
+        
         let teamData = getTeam(team);
         if(teamData){
             event.server.runCommandSilent(`item replace entity ${event.player.username} armor.head with leather_helmet{display:{color:${teamData.decimalColor}},Unbreakable:1,AttributeModifiers:[{AttributeName:"generic.armor",Amount:15,Slot:head,Name:"generic.armor",UUID:[I;-124316,10165,22544,-20330]}]} 1`)
         }
         
-        event.server.schedule(50, ()=>{
-            event.player.setSelectedSlot(pData.lastSelectedSlot);
-            event.player.setInvulnerable(false);
-        })
-
+        giveInvulnerability(event.player, 3);
+        
     }catch(e){
         print(e)
     }

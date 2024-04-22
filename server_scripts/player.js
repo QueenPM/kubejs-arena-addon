@@ -36,3 +36,36 @@ PlayerEvents.loggedIn((e)=>{
 PlayerEvents.respawned((e)=>{
     e.server.runCommandSilent(`attribute ${e.player.username} minecraft:generic.knockback_resistance base set 10`)
 })
+
+let invulnerablePlayers = [];
+
+/**
+ * Give a player Invulnerability & special effects
+ * @param {Internal.ServerPlayer} player 
+ */
+function giveInvulnerability(player, lengthInSeconds){
+    player.displayClientMessage('You are invulnerable for 5 seconds');
+    player.server.runCommandSilent(`effect give ${player.username} minecraft:resistance ${lengthInSeconds} 5 true`);
+    invulnerablePlayers.push(player.username);
+
+    let inventory = player.inventory.getAllItems();
+    player.inventory.clear();
+
+    player.server.schedule(lengthInSeconds * 100, ()=>{
+        invulnerablePlayers = invulnerablePlayers.filter(p => p != player.username);
+        player.displayClientMessage('You are no longer invulnerable');
+
+        for(const item of inventory){
+            player.inventory.addItem(item.id, item.count);
+        }
+    })
+}
+
+
+PlayerEvents.tick(e=>{
+    for(const player of invulnerablePlayers){
+        if(player == e.player.username){
+            e.server.runCommandSilent(`execute as ${player} run particle alexsmobs:worm_portal ${e.player.x} ${e.player.y+1} ${e.player.z} 0.2 0.5 0.2 0 2 normal`);
+        }
+    }
+})
