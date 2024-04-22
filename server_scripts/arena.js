@@ -118,11 +118,13 @@ function stopActiveArena(){
         // If its a FFA
         if(gamemode.teams.length == 1){
             let winner = points[0];
-            server.tell(`§2The winner is ${winner.name} with §6${winner.points} §2points!`);
-            let playerData = getPlayerData(winner.name);
-            if(playerData){
-                playerData.singleWins++;
-                savePlayerData(winner.player, playerData);
+            if(winner){
+                server.tell(`§2The winner is ${winner.name} with §6${winner.points} §2points!`);
+                let playerData = getPlayerData(winner.name);
+                if(playerData){
+                    playerData.singleWins++;
+                    savePlayerData(winner.player, playerData);
+                }
             }
         }else if(gamemode.teams.length > 1){
             // If its team based, award a win for everyone in the team
@@ -135,13 +137,15 @@ function stopActiveArena(){
             }
             teamPoints.sort((a,b) => b.points - a.points);
             let winningTeam = teamPoints[0];
-            let winningTeamPlayers = points.filter(p => p.team == winningTeam.team);
-            server.tell(`§2The winning team is ${getTeam(winningTeam.team).colorCode}Team ${winningTeam.team}§2 with §6${winningTeam.points} §2points!`);
-            for(const player of winningTeamPlayers){
-                let pData = getPlayerData(player.name);
-                if(pData){
-                    pData.teamWins++;
-                    savePlayerData(player.player, pData);
+            if(winningTeam){
+                let winningTeamPlayers = points.filter(p => p.team == winningTeam.team);
+                server.tell(`§2The winning team is ${getTeam(winningTeam.team).colorCode}Team ${winningTeam.team}§2 with §6${winningTeam.points} §2points!`);
+                for(const player of winningTeamPlayers){
+                    let pData = getPlayerData(player.name);
+                    if(pData){
+                        pData.teamWins++;
+                        savePlayerData(player.player, pData);
+                    }
                 }
             }
         }
@@ -236,12 +240,15 @@ function startArena(arenaName, player, selectGamemode){
     currentColor = "§a";
     
     // Get all online players who are available to play
-    let players = getAvailablePlayers();
     let playersAssignedToTeams = {};
-    for(const player of players){
+    for(const player of availablePlayers){
         let pData = getPlayerData(player.username);
         if(!pData) continue;
         let team = pData.team;
+        if(gamemode.teams.length == 1){
+            team = gamemode.teams[0].team;
+            joinTeam(player, team);
+        }
         let gamemodeTeam = gamemode.teams.find(t => t.team == team);
         if(!gamemodeTeam) continue;
         if(team){
