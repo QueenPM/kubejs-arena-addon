@@ -15,8 +15,6 @@
 /**
  * @type {Array<TeamData>}
  */
-// TODO: a lot of team logic is hardcoded. All team related logic should work off of this array.
-// This way, if we want to add more teams, we can just add them here and the rest of the code should work.
 const TEAMS = [ 
     {
         name: "Blue",
