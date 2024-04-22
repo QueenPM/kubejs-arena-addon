@@ -67,6 +67,8 @@ const equipped = [
 
 PlayerEvents.tick((event) => {
     let player = event.player;
+    let data = getPlayerData(player.username);
+    if(!data || data.arena) return;
     let found = equipped.find(e => e.name == player.username);
     if(!found) return;
     let unusual = UNUSUALS[found.effect];
