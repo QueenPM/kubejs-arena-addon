@@ -61,15 +61,10 @@ const GAMEMODES = [
         timeLimit: 1000 * 60 * 5,
         teams: [
             {
-                team: "Blue",
-                maxPlayers: 1,
-                minPlayers: 1
+                team: "Gray",
+                maxPlayers: 2,
+                minPlayers: 2
             },
-            {
-                team: "Red",
-                maxPlayers: 1,
-                minPlayers: 1
-            }
         ],
         colorCode: Color.LIGHT_PURPLE
     }
