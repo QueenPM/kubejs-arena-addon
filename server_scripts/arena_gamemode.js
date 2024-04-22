@@ -25,7 +25,7 @@ const GAMEMODES = [
         name: "tdm",
         displayName: "Team Deathmatch",
         description: "Kill the other team to win",
-        timeLimit: 1000 * 60 * 5,
+        timeLimit: 1000 * 60 * 5, // timeLimit is unused for now
         teams: [
             {
                 team: "Blue",
