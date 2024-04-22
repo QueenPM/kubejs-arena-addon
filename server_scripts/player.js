@@ -29,4 +29,5 @@ PlayerEvents.loggedIn((e)=>{
     data.killStreak = 0;
 
     leaveTeam(e.player);
+    e.server.runCommandSilent(`attribute ${e.player.username} minecraft:generic.knockback_resistance base set 10`)
 })
