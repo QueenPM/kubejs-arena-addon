@@ -104,7 +104,6 @@ function stopActiveArena(){
                 data.killStreak = 0;
                 data.arenaParticipation++;
 
-
                 savePlayerData(participatingPlayer, data);
                 
                 leaveTeam(participatingPlayer);

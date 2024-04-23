@@ -69,3 +69,42 @@ PlayerEvents.tick(e=>{
         }
     }
 })
+
+function playerFinishArena(){
+
+}
+
+// Player leave cleanup event
+PlayerEvents.loggedOut(e=>{
+    let data = getPlayerData(e.player.username);
+    if(!data) return;
+
+    let arena = data.arena;
+    if(arena){
+        let arenaData = getArenaData(data.arena);
+        if(!arenaData) return;
+        let players = arenaData.players;
+        let gamemodeData = getArenaGamemode(arenaData);
+        if(gamemodeData){
+            let teams = gamemodeData.teams;
+            for(const team of teams){
+                if(team.team != data.team) continue;
+                let teamPlayers = players.filter(p => p.team == team.name);
+                if(teamPlayers - 1 < team.minPlayers){
+                    stopActiveArena();
+                    return;
+                }
+            }
+        }
+        
+        delete data.arena;
+        data.currentDeaths = 0;
+        data.currentKills = 0;
+        data.deathStreak = 0;
+        data.killStreak = 0;
+        data.points = 0;
+        savePlayerData(e.player, data);
+    }
+
+    leaveTeam(e.player);
+})
