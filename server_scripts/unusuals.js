@@ -47,22 +47,22 @@ const UNUSUALS = {
 const PI = 3.14159;
 
 const equipped = [
-    {
-        name: "QueenPM",
-        effect: "crown"
-    },
-    {
-        name: "UnknownLady",
-        effect: "heart"
-    },
-    {
-        name: "AxolDyci",
-        effect: "ash"
-    },
-    {
-        name: "RustyS",
-        effect: "splash"
-    }
+    // {
+    //     name: "QueenPM",
+    //     effect: "crown"
+    // },
+    // {
+    //     name: "UnknownLady",
+    //     effect: "heart"
+    // },
+    // {
+    //     name: "AxolDyci",
+    //     effect: "ash"
+    // },
+    // {
+    //     name: "RustyS",
+    //     effect: "splash"
+    // }
 ]
 
 PlayerEvents.tick((event) => {
@@ -79,12 +79,16 @@ PlayerEvents.tick((event) => {
     if (event.server.getTickCount() % timer != 0) return;
 
     let radius = unusual.radius;
-    let angle = (event.server.getTickCount() * unusual.rotationSpeed % 360) * PI / 180; // Convert to radians
-    let x = player.x + radius * Math.cos(angle);
-    let z = player.z + radius * Math.sin(angle);
+    let angle = (event.server.getTickCount() * unusual.rotationSpeed % 360) * PI / 180;
+
+    let yaw = player.yaw * PI / 180;
+    let pitch = -player.pitch * PI / 180;
+    let x = player.x + radius * (Math.cos(yaw) * Math.cos(angle) - Math.sin(yaw) * Math.sin(angle) * Math.cos(pitch));
+    let y = player.y + 2 + radius * Math.sin(angle) * Math.sin(pitch);
+    let z = player.z + radius * (Math.sin(yaw) * Math.cos(angle) + Math.cos(yaw) * Math.sin(angle) * Math.cos(pitch));
 
     for(const effect of effects){
-        let command = `execute as ${event.player.username} run particle ${effect.id} ${x} ${player.y + 2 + (unusual.offsetY || 0)} ${z} ${effect.spread} ${effect.speed} ${effect.count} normal`;
+        let command = `execute as ${event.player.username} run particle ${effect.id} ${x} ${y} ${z} ${effect.spread} ${effect.speed} ${effect.count} normal`;
         event.server.runCommandSilent(command);
     }
 });
